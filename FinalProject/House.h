@@ -10,23 +10,28 @@ void createBuilding(Building **&build, WindowData fullViewport,int road[6][8]) {
 	int hnum = fullViewport.hnum - 1, wnum = fullViewport.wnum - 1;
 	int i, j;
 	
+	//If there is window change, position the point again 
 	if (build) {
 		for (i = 0; i < hnum; i++)
 			for (j = 0; j < wnum; j++) {
-				build[i][j].x = (width-height/12) / (wnum + 1) * (j + 1);
-				build[i][j].y = height / 12 + (height - height / 12) / (hnum + 1) * (i + 1);
+				build[i][j].x = (double)(width-height/12) / (wnum + 1) * (j + 1);
+				build[i][j].y = height / 12 + (double)(height - height / 12) / (hnum + 1) * (i + 1);
 			}
 		return;
 	}
+
+	//create all building
 	build = new Building * [hnum];
 	for (i = 0; i < hnum; i++)
 		build[i] = new Building[wnum]{ Empty, 0, 0 , Middle };
 	for (i = 0; i < hnum; i++)
 		for (j = 0; j < wnum; j++) {
-			build[i][j].x = (width - height / 12) /(wnum+1)* (j + 1);
-			build[i][j].y = height / 12 + (height - height / 12)/(hnum+1) * (i + 1);
+			build[i][j].x = (double)(width - height / 12) /(wnum+1)* (j + 1);
+			build[i][j].y = height / 12 + (double)(height - height / 12)/(hnum+1) * (i + 1);
 			build[i][j].Pos = Middle;
 		}
+
+	//random create building
 	int c = 1;
 	do {
 		i = rand() % hnum;
@@ -45,11 +50,17 @@ int addBuild(SDL_Renderer* renderer, WindowData fullViewport, MouseState mouseSt
 	int width = fullViewport.w, height = fullViewport.h, wnum=fullViewport.wnum, hnum=fullViewport.hnum, xnum, ynum;
 	static int choose = 0;
 	static SDL_TimerID timerID_clock;
+	
+	//Left Click
 	if (mouseState == IN_LB_SC) {
+
+		//If choose, put down the building
 		if (choose) {
 			if (mousex > (width-height/12) / wnum / 2 && mousex<(width -height/12- (width - height / 12) / wnum / 2) && mousey >(height / 12 + ((height - height / 12) / hnum) / 2) && mousey < (height - ((height - height / 12) / hnum) / 2)){
 				xnum = (mousex- (width - height / 12) / wnum / 2) / ((width-height/12) / wnum);
 				ynum = (mousey - height / 12 - (height - height / 12) / hnum / 2) / ((height - height / 12 ) / hnum);
+				
+				//Check for Empty building and having road
 				if (build[ynum][xnum].type == Empty) {
 					if (checkRoad(ynum, xnum)) {
 						build[ynum][xnum].type = (BuildType)choose;
@@ -61,15 +72,21 @@ int addBuild(SDL_Renderer* renderer, WindowData fullViewport, MouseState mouseSt
 					return 2;
 			}
 		}
+
+		//Choosing which building would be built
 		else if (mousex >= (width-height/12) && mousey >= (height/ 12)&&mousey<=(height*8/12)) {
 			choose = mousey / (height / 12);
 			if (choose == 8)
 				choose = 0;
 		}
 	}
+	
+	//Right Click for releasing building
 	else if (mouseState == IN_RB_SC) {
 		choose = 0;
 	}
+
+	//Fixed chosen building on mouse
 	else {
 		switch(choose) {
 			case 1:
@@ -119,41 +136,59 @@ void buildRender(SDL_Renderer* renderer, WindowData fullViewport, Building** bui
 		return;
 	}
 
+	//Render the building
 	for (int i = 0; i < hnum; i++) {
 		for (int j = 0; j < wnum; j++) {
-			if (build[i][j].type == 8) {
+			
+			
+			if (build[i][j].type == House) {
 				t = (i + j) % 2;
 				imgRender(renderer, build_pic[t], build[i][j].Pos, build[i][j].x, build[i][j].y, fmin((width-height/12)/ (wnum + 1)*8/10, (height - height / 12 ) / (hnum + 1) *4/6* build_pic[t].width / build_pic[t].height), (height - height / 12) / (hnum + 1) * 4 / 6, 1, NULL, NULL, 0, no, 255);
 			}
 			else {
+				//If there is a special building
 				if (build[i][j].type) {
 					t = (i + j) % 2 + 2;
 					imgRender(renderer, build_pic[t], build[i][j].Pos, build[i][j].x, build[i][j].y, fmin((width - height / 12) / (wnum + 1) * 8 / 10, (height - height / 12) / (hnum + 1) * 4 / 6 * build_pic[t].width / build_pic[t].height), (height - height / 12) / (hnum + 1) * 4 / 6, 1, NULL, NULL, 0, no, 255);
 				}
 				switch (build[i][j].type) {
+					
+					//Fire Station
 					case 1:
 						t = 4;
 						imgRender(renderer, build_pic[t], build[i][j].Pos, build[i][j].x, build[i][j].y, fmin((width - height / 12) / (wnum + 1) * 8 / 10, (height - height / 12) / (hnum + 1) * 4 / 6 * build_pic[t].width / build_pic[t].height),NULL,1, NULL, NULL, 0, no, 255);
 						break;
+					
+					//Logistics
 					case 2:
 						t = 5;
 						imgRender(renderer, build_pic[t], build[i][j].Pos, build[i][j].x, build[i][j].y, fmin((width - height / 12) / (wnum + 1) * 8 / 10, (height - height / 12) / (hnum + 1) * 4 / 6 * build_pic[t].width / build_pic[t].height),NULL,  1,NULL, NULL, 0, no, 255);
 						break;
+					
+					//Police Office
 					case 3:
 						t=6;
 						imgRender(renderer, build_pic[t], build[i][j].Pos, build[i][j].x, build[i][j].y, fmin((width - height / 12) / (wnum + 1) * 8 / 10, (height - height / 12) / (hnum + 1) * 4 / 6 * build_pic[t].width / build_pic[t].height), NULL,1,NULL, NULL, 0, no, 255);
 						break;
+					
+					//Factory
 					case 4:
 						build[i][j].type = Factory;
 						break;
+					
+					//Shopping Mall
 					case 5:
 						t = 7;
 						imgRender(renderer, build_pic[t], build[i][j].Pos, build[i][j].x, build[i][j].y, fmin((width - height / 12) / (wnum + 1) * 8 / 10, (height - height / 12) / (hnum + 1) * 4 / 6 * build_pic[t].width / build_pic[t].height), NULL, 1, NULL, NULL, 0, no, 255);
 						break;
+					
+					//School
 					case 6:
 						t = 8;
 						imgRender(renderer, build_pic[t], build[i][j].Pos, build[i][j].x, build[i][j].y, fmin((width - height / 12) / (wnum + 1) * 8 / 10, (height - height / 12) / (hnum + 1) * 4 / 6 * build_pic[t].width / build_pic[t].height),NULL,1, NULL, NULL, 0, no, 255);
 						break;
+					
+					//Hospital
 					case 7:
 						t = 9;
 						imgRender(renderer, build_pic[t], build[i][j].Pos, build[i][j].x, build[i][j].y, fmin((width-height/12)/ (wnum + 1)*8/10, (height - height / 12 ) / (hnum + 1) *4/6* build_pic[t].width / build_pic[t].height), NULL,1, NULL,NULL, 0, no, 255);

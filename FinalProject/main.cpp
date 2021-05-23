@@ -9,6 +9,7 @@
 #include "Map.h"
 #include "House.h"
 #include "Car.h"
+#include "randomCar.h"
 
 int initSDL(SDL_Window*&, SDL_Renderer*&); // Starts up SDL and creates window
 void closeSDL(SDL_Window*&, SDL_Renderer*&); // Frees media and shuts down SDL
@@ -77,7 +78,7 @@ int main(int argc, char* args[])
 
 	SDL_TimerID timerID_clock = SDL_AddTimer(10, clock_add, &t);
 	SDL_TimerID timerID_incident;
-	SDL_TimerID timerID_car;
+	SDL_TimerID timerID_car, timerID_randomcar;
 
 	//load images
 	char control_pic_path[3][100] = { "../images/pop_value.png", "../images/money_value.png","../images/love_value.png" };
@@ -100,11 +101,13 @@ int main(int argc, char* args[])
 
 
 	int next_inci, inci=0, inci_alpha=0, path_length;
-	CarData car;
+	CarData car, randomcar;
 	car.velocity = -1;
 	createBuilding(build, fullViewport, road);
 	destroyRoad(road, 6, 8);
 	timerID_car = SDL_AddTimer(20, car_move, &car);
+	//timerID_randomcar = SDL_AddTimer(20, car_move, &randomcar);
+	//createRandomCar(randomcar, fullViewport, windowChange, randomstart(fullViewport, road), 0, car_pic);
 	//While application is running
 	while (!quit)
 	{
@@ -144,11 +147,10 @@ int main(int argc, char* args[])
 		controlRender(renderer, fullViewport, windowChange, t, population, money, love, control_pic, build_pic, flag_pic);
 		if (windowChange) {
 			createBuilding(build, fullViewport, road);
-			if(car.velocity>=0)
-				createCar(car, fullViewport, windowChange, NULL, NULL, NULL, NULL, NULL, NULL);
 		}
 		buildRender(renderer, fullViewport, build, build_pic);
 		carRender(renderer, fullViewport, car);
+		//carRender(renderer, fullViewport, randomcar);
 		incident(renderer, fullViewport, windowChange, inci, inci_alpha);
 		next_inci = addCar(renderer, fullViewport, mouseState, mouseX, mouseY, build, car, car_pic);
 		next_inci += addBuild(renderer, fullViewport, mouseState, mouseX, mouseY, build, build_pic);

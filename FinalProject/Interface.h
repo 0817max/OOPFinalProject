@@ -1,6 +1,7 @@
 Uint32 clock_add(Uint32 interval, void* param)
 {
 	int* t = (int*)param;
+	//Return 0 when 1 day has past
 	(*t) = ((*t) + 1 )% (60*60 * 24);
 	return interval;
 }
@@ -19,6 +20,7 @@ void controlRender(SDL_Renderer* renderer, WindowData fullViewport, bool windowC
 	//value
 	char p[10], m[10], l[10];
 
+	//Population word and background
 	imgRender(renderer, control_pic[0],  RightTop, width / 6 - height / 2.25 / 12 * 0.2, height / 4 / 12 + 0.1 * height / 2.25 / 12 , NULL, height / 2.25 / 12, 1, NULL, NULL, 0, no, 255);
 	sprintf_s(p, 10, "%d", population);
 	static TextData textp = loadTextTexture(renderer, p, "../fonts/TaipeiSansTCBeta-Regular.ttf", height / 2.25 / 12, 255, 255, 255, BLENDED);
@@ -29,6 +31,7 @@ void controlRender(SDL_Renderer* renderer, WindowData fullViewport, bool windowC
 	roundedBoxColor(renderer, width / 6, height / 4 / 12, width * 1.8 / 6, height / 4 / 12 + 1.2 * textp.height, height / 50, 0xFF888888);
 	textRender(renderer, textp, Right, width *1.8/ 6 - 0.2*textp.width, height / 4 / 12+0.6*textp.height, no, 255);
 
+	//Money word and background
 	imgRender(renderer, control_pic[1],  RightTop, width * 3 / 6 - height / 2.25 / 12 * 0.2, height / 4 / 12 + 0.1 * height / 2.25 / 12 , NULL, height / 2.25 / 12, 1, NULL, NULL, 0, no, 255);
 	sprintf_s(m, 10, "%d", money);
 	static TextData textm = loadTextTexture(renderer, m, "../fonts/TaipeiSansTCBeta-Regular.ttf", height / 2.25 / 12, 255, 255, 255, BLENDED);
@@ -39,6 +42,7 @@ void controlRender(SDL_Renderer* renderer, WindowData fullViewport, bool windowC
 	roundedBoxColor(renderer, width * 3 / 6, height / 4 / 12, width * 3.8 / 6, height / 4 / 12 + 1.2 * textm.height, height / 50, 0xFF888888);
 	textRender(renderer, textm, Right, width * 3.8 / 6 - 0.2 * textm.width, height / 4 / 12 + 0.6 * textm.height, no, 255);
 	
+	//Love word and background
 	imgRender(renderer, control_pic[2],  RightTop, width * 5 / 6 - height / 2.25 / 12 * 0.2, height / 4 / 12 + 0.1 * height / 2.25 / 12 , NULL, height / 2.25 / 12, 1, NULL, NULL, 0, no, 255);
 	sprintf_s(l, 10, "%d", love);
 	static TextData textl = loadTextTexture(renderer, l, "../fonts/TaipeiSansTCBeta-Regular.ttf", height / 2.25 / 12, 255, 255, 255, BLENDED);
@@ -50,9 +54,11 @@ void controlRender(SDL_Renderer* renderer, WindowData fullViewport, bool windowC
 	textRender(renderer, textl, Right, width * 5.8 / 6 - 0.2 * textl.width, height / 4 / 12 + 0.6 * textl.height, no, 255);
 	
 	//Right
+	//Background
 	boxColor(renderer, width-height/12, height/12, width, height, 0xFF073480);
 	boxColor(renderer, width - height / 12, height  *8/12 , width, height, 0xFF022D72);
 	
+	//House Picture
 	imgRender(renderer, build_pic[4], Middle, width-height/24,	height *1.5/12, NULL, height/14,1, NULL, NULL, 0, no, 255);
 	imgRender(renderer, build_pic[5], Middle, width - height / 24, height * 2.5 / 12, NULL, height / 14, 1, NULL, NULL, 0, no, 255);
 	imgRender(renderer, build_pic[6], Middle, width-height/24,	height  *3.5/ 12, NULL, height/14, 1, NULL, NULL, 0, no, 255);
@@ -61,6 +67,7 @@ void controlRender(SDL_Renderer* renderer, WindowData fullViewport, bool windowC
 	imgRender(renderer, build_pic[8], Middle, width-height/24,	height *6.5/12, NULL, height/14, 1, NULL, NULL, 0, no, 255);
 	imgRender(renderer, build_pic[9], Middle, width-height/24,	height *7.5/12, NULL, height/14, 1, NULL, NULL, 0, no, 255);
 
+	//Flag Picture
 	imgRender(renderer, flag_pic, Right, width, height*10/12, NULL, height/12, 1, NULL, NULL, 0, no, 255);
 
 	//divide line
@@ -83,22 +90,30 @@ void incident(SDL_Renderer* renderer, WindowData fullViewport, bool windowChange
 
 	if (!(alpha) || (!(incident_type)))
 		return;
+	//Use alpha to control the interval of words present
 	if (alpha > 255)
 		alpha = 255;
 	int width = fullViewport.w, height = fullViewport.h;
+	//Change the words here to choose different incident
 	char incident_name[3][50] = { "There is no road!", "There is a building!", "There is no building!" };
 	char inci_pic_path[50] = "../images/incident.png";
 	static ImageData inci_pic = loadImgTexture(renderer, inci_pic_path, 1, 1, 1);
 	static TextData incident_text= loadTextTexture(renderer, incident_name[incident_type - 1], "../fonts/TaipeiSansTCBeta-Regular.ttf", height / 27, 10, 10, 10, BLENDED);
+	
+	//Saving Resources(Only change texture when window changes)
 	static int fromer_type;
 	if ((fromer_type != incident_type || windowChange)&&(incident_text.texture)) {
 		SDL_DestroyTexture(incident_text.texture);
 		fromer_type = incident_type;
 		incident_text=loadTextTexture(renderer, incident_name[fromer_type-1], "../fonts/TaipeiSansTCBeta-Regular.ttf", height / 27, 10, 10, 10, BLENDED);
 	}
+
+	//Incident words and background 
 	roundedBoxColor(renderer, width - 1.3 * incident_text.width-height/12, height / 12 * 1.1, width-0.1*incident_text.width-height/12, height / 12 * 1.1 + incident_text.height * 1.2, height / 50, 0x88FFFFFF);
 	textRender(renderer, incident_text, LeftTop, width - 1.2 * incident_text.width-height/12, height / 12 * 1.1 + 0.1 * incident_text.height, no, alpha);
 	imgRender(renderer, inci_pic,  LeftTop, width - 1.2 * incident_text.width - 1.2 * incident_text.height-height/12, height / 12 * 1.1 , NULL, incident_text.height * 1.2, 1, NULL, NULL, 0, no, 255);
+	
+	//free up resource when closing
 	if (renderer == NULL)
 		SDL_DestroyTexture(inci_pic.texture);
 }
@@ -106,6 +121,7 @@ void incident(SDL_Renderer* renderer, WindowData fullViewport, bool windowChange
 Uint32 incident_add(Uint32 interval, void* param)
 {
 	int* t = (int*)param;
+	//Use alpha to control to the time of presentation
 	if ((*t) > 180) {
 		(*t) = (*t) -= ((450-(*t))/10+1);
 		return interval;

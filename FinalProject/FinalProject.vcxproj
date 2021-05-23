@@ -149,6 +149,7 @@
     <ClInclude Include="House.h" />
     <ClInclude Include="Interface.h" />
     <ClInclude Include="Map.h" />
+    <ClInclude Include="randomCar.h" />
     <ClInclude Include="SDLusage.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
