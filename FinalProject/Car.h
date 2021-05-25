@@ -235,8 +235,12 @@ int carMenu(SDL_Renderer* renderer, WindowData fullViewport, MouseState mouseSta
 
 void carRender(SDL_Renderer* renderer, WindowData fullViewport, CarData& car) {
 	int width = fullViewport.w, height = fullViewport.h, hnum=fullViewport.hnum, wnum=fullViewport.wnum;
-	if (car.velocity == -1)
+	if (car.velocity == -1||car.velocity==0)
 		return;
+	if (car.x<0.5 || car.x>wnum - 0.5 || car.y<0.5 || car.y>hnum - 0.5) {
+		car.velocity = -1;
+		return;
+	}
 	imgRender(renderer, *(car.img), Left, car.x*(width-height/12)/wnum, car.y*(height*11/12)/hnum+(height/12), fmin((width-height/12)/wnum/10., height*11/12/hnum/6.), NULL, 1, NULL, NULL, car.angle, no, 255);
 }
 
@@ -248,9 +252,6 @@ Uint32 car_move(Uint32 interval, void* param)
 	if (t->velocity == -1)
 		return interval;
 
-	//If path==-1, velocity=-1;
-	if (t->path[t->i] == -1)
-		t->velocity = -1;
 
 	int width = t->window->w, height = t->window->h, wnum=t->window->wnum, hnum=t->window->hnum;
 	t->angle %= 360;
@@ -316,6 +317,10 @@ Uint32 car_move(Uint32 interval, void* param)
 	}
 	else
 	{
+		if (t->path[t->i+1] < 0) {		//special stop
+			t->velocity = -1;
+		}
+
 		t->intersect =true;
 		t->x = (int)t->x+0.5;
 		t->y = (int)t->y+0.5;

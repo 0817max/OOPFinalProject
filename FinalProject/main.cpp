@@ -78,7 +78,7 @@ int main(int argc, char* args[])
 
 	SDL_TimerID timerID_clock = SDL_AddTimer(10, clock_add, &t);
 	SDL_TimerID timerID_incident;
-	SDL_TimerID timerID_car, timerID_randomcar;
+	SDL_TimerID timerID_car, timerID_randomcar[20];
 
 	//load images
 	char control_pic_path[3][100] = { "../images/pop_value.png", "../images/money_value.png","../images/love_value.png" };
@@ -101,13 +101,15 @@ int main(int argc, char* args[])
 
 
 	int next_inci, inci=0, inci_alpha=0, path_length;
-	CarData car, randomcar;
+	CarData car, randomcar[20];
 	car.velocity = -1;
 	createBuilding(build, fullViewport, road);
 	destroyRoad(road, 6, 8);
 	timerID_car = SDL_AddTimer(20, car_move, &car);
-	//timerID_randomcar = SDL_AddTimer(20, car_move, &randomcar);
-	//createRandomCar(randomcar, fullViewport, windowChange, randomstart(fullViewport, road), 0, car_pic);
+	for (int i = 0; i < 20; i++)
+		createRandomCar(randomcar[i], fullViewport, windowChange, randomstart(fullViewport, road), rand()%3, car_pic);
+	for (int i = 0; i < 20; i++)
+		timerID_randomcar[i] = SDL_AddTimer(15, car_move, &randomcar[i]);
 	//While application is running
 	while (!quit)
 	{
@@ -150,6 +152,8 @@ int main(int argc, char* args[])
 		}
 		buildRender(renderer, fullViewport, build, build_pic);
 		carRender(renderer, fullViewport, car);
+		for (int i = 0; i < 20; i++)
+			carRender(renderer, fullViewport, randomcar[i]);
 		//carRender(renderer, fullViewport, randomcar);
 		incident(renderer, fullViewport, windowChange, inci, inci_alpha);
 		next_inci = addCar(renderer, fullViewport, mouseState, mouseX, mouseY, build, car, car_pic);
