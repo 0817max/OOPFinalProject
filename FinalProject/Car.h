@@ -1,16 +1,5 @@
 #include<limits.h>
-struct CarData
-{
-	double x, y;	//x:0.5~(wnum-0.5), y:0.5~(hnum-0.5)
-	WindowData* window;
-	ImageData* img;
-	int i;	//start from 0 to length-1
-	char* path;  //up: 3, right: 2, down: 1, left: 0
-	int length;
-	int angle;
-	double velocity;  //-1:no car
-	bool intersect;
-};
+
 
 int carMenu(SDL_Renderer* renderer, WindowData fullViewport, MouseState mouseState, int mousex, int mousey, int& choose, ImageData car_pic[]);
 void bestRoute(WindowData& fullViewport, int** distance, int y, int x, int direction);
@@ -95,7 +84,7 @@ void createCar(CarData& car, WindowData& fullViewport, bool windowChange, int st
 	car.intersect = false;
 }
 
-int addCar(SDL_Renderer* renderer, WindowData fullViewport, MouseState mouseState, int mousex, int mousey, Building** build , CarData& car, ImageData car_pic[]) {
+int addCar(SDL_Renderer* renderer, WindowData fullViewport, MouseState mouseState, int mousex, int mousey, Building** build , CarData car[], ImageData car_pic[]) {
 	int width = fullViewport.w, height = fullViewport.h, wnum = fullViewport.wnum, hnum = fullViewport.hnum, xnum, ynum;
 	static int choose = 0, select=0;
 	static SDL_TimerID timerID_clock;
@@ -125,16 +114,16 @@ int addCar(SDL_Renderer* renderer, WindowData fullViewport, MouseState mouseStat
 				}
 				else if (build[ynum][xnum].type == House||Factory) {
 					CarData t;
-					car.length = INT_MAX;
-					if (!car.path)
-						delete[](car.path);
+					car[choose-1].length = INT_MAX;
+					if (!car[choose - 1].path)
+						delete[](car[choose - 1].path);
 					if (choose == 1 || choose == 2) {
 						for (int i = 0; i < hnum-1; i++)
 							for (int j = 0; j < wnum-1; j++)
 								if (build[i][j].type == FireSta) {
 									createCar(t, fullViewport, false, i, j, ynum, xnum, choose + 2, car_pic);
-									if (t.length < car.length)
-										car = t;
+									if (t.length < car[choose - 1].length)
+										car[choose - 1] = t;
 									choose = 0;
 								}
 					}
@@ -143,8 +132,8 @@ int addCar(SDL_Renderer* renderer, WindowData fullViewport, MouseState mouseStat
 							for (int j = 0; j < wnum-1; j++)
 								if (build[i][j].type == Logistics) {
 									createCar(t, fullViewport, false, i, j, ynum, xnum, 5, car_pic);
-									if (t.length < car.length)
-										car = t;
+									if (t.length < car[choose - 1].length)
+										car[choose - 1] = t;
 									choose = 0;
 								}
 					}
@@ -153,8 +142,8 @@ int addCar(SDL_Renderer* renderer, WindowData fullViewport, MouseState mouseStat
 							for (int j = 0; j < wnum-1; j++)
 								if (build[i][j].type == PoliceOff) {
 									createCar(t, fullViewport, false, i, j, ynum, xnum, 7, car_pic);
-									if (t.length < car.length)
-										car = t;
+									if (t.length < car[choose - 1].length)
+										car[choose - 1] = t;
 									choose = 0;
 								}
 					}
@@ -186,7 +175,7 @@ int addCar(SDL_Renderer* renderer, WindowData fullViewport, MouseState mouseStat
 		}
 	}
 
-	if (car.length == 0)
+	if (car[choose - 1].length == 0)
 		printf("!");
 	return 0;
 }
@@ -235,10 +224,19 @@ int carMenu(SDL_Renderer* renderer, WindowData fullViewport, MouseState mouseSta
 
 void carRender(SDL_Renderer* renderer, WindowData fullViewport, CarData& car) {
 	int width = fullViewport.w, height = fullViewport.h, hnum=fullViewport.hnum, wnum=fullViewport.wnum;
-	if (car.velocity == -1||car.velocity==0)
+	if (car.velocity == -1) {
+		if (!car.path) {
+			delete[]car.path;
+			car.path = NULL;
+		}
 		return;
+	}
 	if (car.x<0.5 || car.x>wnum - 0.5 || car.y<0.5 || car.y>hnum - 0.5) {
 		car.velocity = -1;
+		if (!car.path) {
+			delete[]car.path;
+			car.path = NULL;
+		}
 		return;
 	}
 	imgRender(renderer, *(car.img), Left, car.x*(width-height/12)/wnum, car.y*(height*11/12)/hnum+(height/12), fmin((width-height/12)/wnum/10., height*11/12/hnum/6.), NULL, 1, NULL, NULL, car.angle, no, 255);
@@ -246,131 +244,273 @@ void carRender(SDL_Renderer* renderer, WindowData fullViewport, CarData& car) {
 
 Uint32 car_move(Uint32 interval, void* param)
 {
-	CarData* t = (CarData*)param;
-	
-	//If velocity =-1, car disappear
-	if (t->velocity == -1)
-		return interval;
+	CarData *t = (CarData*)param;
+	int width = t[4].window->w, height = t[4].window->h, wnum = t[4].window->wnum, hnum = t[4].window->hnum;
+	double diff;
 
-
-	int width = t->window->w, height = t->window->h, wnum=t->window->wnum, hnum=t->window->hnum;
-	t->angle %= 360;
-
-	//If not into the intersect or the angle has meet the next direction(If not go straight)
-	if (!checkIntersect(*(t->window), road, t->y, t->x)|| ((t->path[t->i] != t->path[t->i + 1] && (t->angle == (3 - t->path[t->i + 1]) * 90)))) {
-		if (t->intersect) {
-			(t->i)++;
-			t->intersect = false;
+	static int** CarIntersect = NULL;
+	if(CarIntersect==NULL){
+		CarIntersect=new int* [hnum] {NULL};
+		for (int i = 0; i < hnum; i++) {
+			CarIntersect[i] = new int[wnum];
+			for (int j = 0; j < wnum; j++)
+				CarIntersect[i][j] = 0;
 		}
-		t->intersect = false;
-		switch (t->angle%360) {
+	}
+	for (int i = 0; i < RANDCARNUM + 4; i++) {
+		//If velocity =-1, car disappear
+		if (t[i].velocity == -1) {
+			continue;
+		}
+
+		//stop when there is a car in front of mycar(by direction) 
+		bool stop = false;
+		for (int k = 0; k < RANDCARNUM + 4; k++) {
+			t[i].angle %= 360;
+			if (i == k || t[k].velocity < 0)
+				continue;
+			int length;
+			if (k == 2||i==2) //truck
+				length = 3;
+			else
+				length = 2;
+			if (t[i].angle == t[k].angle&&(t[i].angle%90==0)) {
+				int choose;
+				if (t[i].x == t[k].x && t[i].y == t[k].y)
+					if (i < k)
+						stop = false;
+					else
+						stop = true;
+				if (((width - height / 12) / wnum / 10.) < (height * 11 / 12 / hnum / 6.)) {
+					double xlength=1 / 10. * ((width - height / 12) / wnum) / (height * 11 / 12 / hnum);
+					switch (t[i].angle) {
+						case 0:
+							if (t[k].x == t[i].x && (t[i].y - t[k].y) > 0 && (t[i].y - t[k].y) < length / 6.)
+								stop = true;
+							break;
+						case 90:
+							if (t[k].y == t[i].y &&(t[k].x - t[i].x) > 0 && (t[k].x - t[i].x) < length*xlength)
+								stop = true;
+							break;
+						case 180:
+							if (t[k].x == t[i].x && (t[k].y - t[i].y )> 0 &&( t[k].y - t[i].y) < length / 6.)
+								stop = true;
+							break;
+						case 270:
+							if (t[k].y == t[k].y && (t[i].x - t[k].x) > 0 && (t[i].x - t[k].x) < length*xlength)
+								stop = true;
+							break;
+
+					}
+				}
+				else {
+					
+					double ylength = 1 / 6. / ((width - height / 12) / wnum) * (height * 11 / 12 / hnum);
+					switch (t[i].angle) {
+						case 0:
+							if (t[k].x == t[i].x && (t[i].y - t[k].y) > 0 && (t[i].y - t[k].y) < length*ylength)
+								stop = true;
+							break;
+						case 90:
+							if (t[k].y == t[i].y && (t[k].x - t[i].x) > 0 && (t[k].x - t[i].x) < length/10.)
+								stop = true;
+							break;
+						case 180:
+							if (t[k].x == t[i].x && (t[k].y - t[i].y) > 0 && (t[k].y - t[i].y) < length / 6.)
+								stop = true;
+							break;
+						case 270:
+							if (t[k].y == t[k].y && (t[i].x - t[k].x) > 0 && (t[i].x - t[k].x) < length*ylength)
+								stop = true;
+							break;
+					}
+				}
+			}
+		}
+		if (stop)
+			continue;
+
+		t[i].angle %= 360;
+
+		//Enter the intersection and make mark
+		if (checkIntersect(*(t[i].window), road, t[i].y, t[i].x))
+			if (!CarIntersect[(int)t[i].y][(int)t[i].x]) {
+				CarIntersect[(int)t[i].y][(int)t[i].x] = i + 1;
+			}
+		
+		//Create new car and avoid generate in intersect with car
+		for (int j = 4; j < RANDCARNUM + 4; j++)
+			if (t[j].velocity < 0) {
+				if (t[j].path) {
+					delete t[j].path;
+					t[j].path = NULL;
+				}
+				point start = randomstart(*(t[j].window), road);
+				while (CarIntersect[start.y][start.x]) {
+					start = randomstart(*(t[j].window), road);
+				}
+				createRandomCar(t[j], *(t[j].window), start, *(t[j].img));
+				CarIntersect[start.y][start.x] = j + 1;
+			}
+
+		//If not into the intersect or the angle has meet the next direction(If not go straight)
+		if (!checkIntersect(*(t[i].window), road, t[i].y, t[i].x) || (t[i].i<t[i].length)&&((t[i].path[t[i].i] != t[i].path[t[i].i + 1] && (t[i].angle == (3 - t[i].path[t[i].i + 1]) * 90)))) {
+			if (t[i].intersect) {
+				(t[i].i)++;
+				t[i].intersect = false;
+			}
+			t[i].intersect = false;
+
+			//Leave the interscetion, free the intersection
+			for (int j = 0; j < hnum; j++)
+				for (int k = 0; k < wnum; k++)
+					if (i == 2) {	//for truck
+						if (CarIntersect[j][k] == i + 1 && (fabs(t[i].x - (int)t[i].x - 0.5) > 2 / 10. || fabs(t[i].y - (int)t[i].y - 0.5) > 2 / 6.))
+							CarIntersect[j][k] = 0;
+					}
+					else if (CarIntersect[j][k] == i + 1&& (fabs(t[i].x - (int)t[i].x - 0.5)>1/10.||fabs(t[i].y - (int)t[i].y - 0.5)>1/6.))
+						CarIntersect[j][k] = 0;
+
+			//close to intersection, stop to check if there is a car
+			switch (t[i].angle % 360) {
+				case 0:
+					if (!CarIntersect[(int)(t[i].y - 0.5)][(int)t[i].x] || t[i].y + 0.5-(int)(t[i].y + 0.5) > 1 / 6.) {
+						t[i].y -= (t[i].velocity);
+						t[i].x = (int)t[i].x + 0.5;
+					}
+					break;
+				case 90:
+					if (!CarIntersect[(int)(t[i].y)][(int)(t[i].x+0.5)] || t[i].x + 0.5 - (int)(t[i].x + 0.5) <  9/ 10.) {
+						t[i].x += (t[i].velocity);
+						t[i].y = (int)t[i].y + 0.5;
+					}
+					break;
+				case 180:
+					if (!CarIntersect[(int)(t[i].y + 0.5)][(int)t[i].x] || t[i].y + 0.5 - (int)(t[i].y + 0.5) < 5 / 6.) {
+						t[i].y += (t[i].velocity);
+						t[i].x = (int)t[i].x + 0.5;
+					}
+					break;
+				case 270:
+					if (!CarIntersect[(int)(t[i].y)][(int)(t[i].x-0.5)] || t[i].x + 0.5 - (int)(t[i].x + 0.5) > 1 / 10.) {
+						t[i].x -= (t[i].velocity);
+						t[i].y = (int)t[i].y + 0.5;
+					}
+					break;
+			}
+
+			//the end of the path, stop at the middle of the road
+			if (t[i].i == t[i].length) {
+				if (t[i].angle == 90 || t[i].angle == 270) {
+					if (fabs(t[i].x - (int)t[i].x) < 2 * t[i].velocity)
+						if (i < 4)
+							t[i].velocity = -1;
+						else
+							t[i].velocity = -1;
+				}
+				else if (t[i].angle == 0 || t[i].angle == 180) {
+					if (fabs(t[i].y - (int)t[i].y) < 2 * t[i].velocity)
+						if (i < 4)
+							t[i].velocity = -1;
+						else
+							t[i].velocity = -1;
+				}
+			}
+			continue;
+		}
+		else if (t[i].path[t[i].i] == t[i].path[t[i].i + 1]) {		//go straight
+
+			if (t[i].path[t[i].i + 1] < 0) {		//special stop
+				t[i].velocity = -1;
+				for (int j = 0; j < hnum; j++)
+					for (int k = 0; k < wnum; k++)
+						if (CarIntersect[j][k] == i + 1)
+							CarIntersect[j][k] = 0;
+			}
+			t[i].intersect = true;
+			if (CarIntersect[(int)t[i].y][(int)t[i].x] != (i + 1)&& CarIntersect[(int)t[i].y][(int)t[i].x])
+				continue;
+			switch (t[i].angle % 360) {
 			case 0:
-				t->y -= (t->velocity);
-				t->x = (int)t->x + 0.5;
+				t[i].y -= (t[i].velocity);
 				break;
 			case 90:
-				t->x += (t->velocity);
-				t->y = (int)t->y + 0.5;
+				t[i].x += (t[i].velocity);
 				break;
 			case 180:
-				t->y += (t->velocity);
-				t->x = (int)t->x + 0.5;
+				t[i].y += (t[i].velocity);
 				break;
 			case 270:
-				t->x -= (t->velocity);
-				t->y = (int)t->y + 0.5;
+				t[i].x -= (t[i].velocity);
 				break;
-		}
-
-		//the end of the path, stop at the middle of the road
-		if (t->i == t->length)
-			if (t->angle == 90 || t->angle == 270) {
-				if (fabs(t->x-(int)t->x)<2*t->velocity)
-					t->velocity = 0;
 			}
-			else if (t->angle == 0 || t->angle == 180) {
-				if (fabs(t->y - (int)t->y) < 2*t->velocity)
-					t->velocity = 0;
+			continue;
+		}
+		else
+		{
+			if (t[i].path[t[i].i + 1] < 0) {		//special stop
+				t[i].velocity = -1;
+				for (int j = 0; j < hnum; j++)
+					for (int k = 0; k < wnum; k++)
+						if (CarIntersect[j][k] == i + 1)
+							CarIntersect[j][k] = 0;
 			}
-			
-		return interval;
-	}
 
-	else if (t->path[t->i] == t->path[t->i+1]) {		//go straight
-
-		t->intersect = true;
-		switch (t->angle % 360) {
-			case 0:
-				t->y -= (t->velocity);
-				break;
-			case 90:
-				t->x += (t->velocity);
-			break;
-			case 180:
-				t->y += (t->velocity);
-				break;
-			case 270:
-				t->x -= (t->velocity);
-				break;
-		}
-		return interval;
-	}
-	else
-	{
-		if (t->path[t->i+1] < 0) {		//special stop
-			t->velocity = -1;
-		}
-
-		t->intersect =true;
-		t->x = (int)t->x+0.5;
-		t->y = (int)t->y+0.5;
-		if ((t->path[t->i] + 3) % 4 == t->path[t->i + 1]) {   //turn right
-			(t->angle) = (t->angle + 5 +360)% 360;
-			switch (t->path[t->i]) {
+			t[i].intersect = true;
+			if (CarIntersect[(int)t[i].y][(int)t[i].x] != (i + 1)&& CarIntersect[(int)t[i].y][(int)t[i].x])
+				continue; 
+			t[i].x = (int)t[i].x + 0.5;
+			t[i].y = (int)t[i].y + 0.5;
+			if ((t[i].path[t[i].i] + 3) % 4 == t[i].path[t[i].i + 1]) {   //turn right
+				(t[i].angle) = (t[i].angle + 5 + 360) % 360;
+				switch (t[i].path[t[i].i]) {
 				case 0:			//270-360 sin<0, cos>0
-					t->x -= (1. / 10) * sin(t->angle * M_PI / 180);
-					t->y -= (1. / 6) * cos(t->angle * M_PI / 180);
+					t[i].x -= (1. / 10) * sin(t[i].angle * M_PI / 180);
+					t[i].y -= (1. / 6) * cos(t[i].angle * M_PI / 180);
 					break;
 				case 1:			//180-270 sin<0 cos<0
-					t->x += (1. / 10) * sin(t->angle * M_PI / 180);
-					t->y += (1. / 6) * cos(t->angle * M_PI / 180);
+					t[i].x += (1. / 10) * sin(t[i].angle * M_PI / 180);
+					t[i].y += (1. / 6) * cos(t[i].angle * M_PI / 180);
 					break;
 				case 2:			//90-180 sin>0 cos<0
-					t->x -= (1. / 10) * sin(t->angle * M_PI / 180);
-					t->y -= (1. / 6) * cos(t->angle * M_PI / 180);
+					t[i].x -= (1. / 10) * sin(t[i].angle * M_PI / 180);
+					t[i].y -= (1. / 6) * cos(t[i].angle * M_PI / 180);
 					break;
 				case 3:			//0-90 sin>0 cos>0
-					t->x += (1. / 10) * sin(t->angle * M_PI / 180);
-					t->y += (1. / 6) * cos(t->angle * M_PI / 180);
+					t[i].x += (1. / 10) * sin(t[i].angle * M_PI / 180);
+					t[i].y += (1. / 6) * cos(t[i].angle * M_PI / 180);
 					break;
+				}
+
 			}
-			
-		}
-		else if ((t->path[t->i] + 1) % 4 == t->path[t->i + 1]) {  //turn left
-			(t->angle) = (t->angle - 5 + 360) % 360;
-			switch (t->path[t->i]) {
+			else if ((t[i].path[t[i].i] + 1) % 4 == t[i].path[t[i].i + 1]) {  //turn left
+				(t[i].angle) = (t[i].angle - 5 + 360) % 360;
+				switch (t[i].path[t[i].i]) {
 				case 0:			//270-180 sin<0, cos<0
-					t->x -= (1. / 10) * sin(t->angle * M_PI / 180);
-					t->y -= (1. / 6) * cos(t->angle * M_PI / 180);
+					t[i].x -= (1. / 10) * sin(t[i].angle * M_PI / 180);
+					t[i].y -= (1. / 6) * cos(t[i].angle * M_PI / 180);
 					break;
 				case 1:			//180-90 sin>0 cos<0
-					t->x += (1. / 10) * sin(t->angle * M_PI / 180);
-					t->y += (1. / 6) * cos(t->angle * M_PI / 180);
+					t[i].x += (1. / 10) * sin(t[i].angle * M_PI / 180);
+					t[i].y += (1. / 6) * cos(t[i].angle * M_PI / 180);
 					break;
 				case 2:			//90-0 sin>0 cos>0
-					t->x -= (1. / 10) * sin(t->angle * M_PI / 180);
-					t->y -= (1. / 6) * cos(t->angle * M_PI / 180);
+					t[i].x -= (1. / 10) * sin(t[i].angle * M_PI / 180);
+					t[i].y -= (1. / 6) * cos(t[i].angle * M_PI / 180);
 					break;
 				case 3:			//0-270 sin<0 cos>0
-					t->x += (1. / 10) * sin(t->angle * M_PI / 180);
-					t->y += (1. / 6) * cos(t->angle * M_PI / 180);
+					t[i].x += (1. / 10) * sin(t[i].angle * M_PI / 180);
+					t[i].y += (1. / 6) * cos(t[i].angle * M_PI / 180);
 					break;
+				}
 			}
+			//		printf("%d ", t[i].angle);
+			//		printf("%lf %lf\n", t[i].x, t[i].y);
+			continue;
 		}
-//		printf("%d ", t->angle);
-//		printf("%lf %lf\n", t->x, t->y);
-		return interval;
 	}
+
+	return interval;
 } 
 
 char* createPath(WindowData& fullViewport, int start_ynum,int start_xnum, bool verticle, int house_hnum, int house_wnum, int &length) {

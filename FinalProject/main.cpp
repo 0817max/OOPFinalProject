@@ -8,8 +8,8 @@
 #include "Interface.h"
 #include "Map.h"
 #include "House.h"
-#include "Car.h"
 #include "randomCar.h"
+#include "Car.h"
 
 int initSDL(SDL_Window*&, SDL_Renderer*&); // Starts up SDL and creates window
 void closeSDL(SDL_Window*&, SDL_Renderer*&); // Frees media and shuts down SDL
@@ -78,7 +78,7 @@ int main(int argc, char* args[])
 
 	SDL_TimerID timerID_clock = SDL_AddTimer(10, clock_add, &t);
 	SDL_TimerID timerID_incident;
-	SDL_TimerID timerID_car, timerID_randomcar[20];
+	SDL_TimerID timerID_car;
 
 	//load images
 	char control_pic_path[3][100] = { "../images/pop_value.png", "../images/money_value.png","../images/love_value.png" };
@@ -101,15 +101,34 @@ int main(int argc, char* args[])
 
 
 	int next_inci, inci=0, inci_alpha=0, path_length;
-	CarData car, randomcar[20];
-	car.velocity = -1;
+
+	CarData car[RANDCARNUM+4];
+	point start[RANDCARNUM];
+	bool repeat = false;
+	for (int i = 0; i < RANDCARNUM + 4; i++) {
+		car[i].velocity = -1;
+	}
+	for (int i = 0; i < RANDCARNUM; i++) {
+		printf("%d\n", i);
+		do {
+			repeat = false;
+			start[i] = randomstart(fullViewport, road);
+			printf("%d %d\n", start[i].x, start[i].y);
+			for (int j = 0; j <i; j++)
+				if ((start[j].x == start[i].x)&& (start[j].y == start[i].y)) {
+					repeat = true;
+					break;
+				}
+		} while (repeat);
+	}
+	for (int i = 4; i < RANDCARNUM + 4; i++)
+		createRandomCar(car[i], fullViewport, start[i-4], car_pic[rand() % 3]);
+	timerID_car = SDL_AddTimer(15, car_move, car);
+
 	createBuilding(build, fullViewport, road);
 	destroyRoad(road, 6, 8);
-	timerID_car = SDL_AddTimer(20, car_move, &car);
-	for (int i = 0; i < 20; i++)
-		createRandomCar(randomcar[i], fullViewport, windowChange, randomstart(fullViewport, road), rand()%3, car_pic);
-	for (int i = 0; i < 20; i++)
-		timerID_randomcar[i] = SDL_AddTimer(15, car_move, &randomcar[i]);
+
+	
 	//While application is running
 	while (!quit)
 	{
@@ -151,9 +170,9 @@ int main(int argc, char* args[])
 			createBuilding(build, fullViewport, road);
 		}
 		buildRender(renderer, fullViewport, build, build_pic);
-		carRender(renderer, fullViewport, car);
-		for (int i = 0; i < 20; i++)
-			carRender(renderer, fullViewport, randomcar[i]);
+		for (int i = 0; i < RANDCARNUM + 4; i++) {
+			carRender(renderer, fullViewport, car[i]);
+		}
 		//carRender(renderer, fullViewport, randomcar);
 		incident(renderer, fullViewport, windowChange, inci, inci_alpha);
 		next_inci = addCar(renderer, fullViewport, mouseState, mouseX, mouseY, build, car, car_pic);

@@ -1,8 +1,22 @@
+#define RANDCARNUM 28
+struct CarData
+{
+	double x, y;	//x:0.5~(wnum-0.5), y:0.5~(hnum-0.5)
+	WindowData* window;
+	ImageData* img;
+	int i;	//start from 0 to length-1
+	char* path;  //up: 3, right: 2, down: 1, left: 0
+	int length;
+	int angle;
+	double velocity;  //-1:no car
+	bool intersect;
+};
 struct point {
 	int x, y;
 	bool exist;
 	int l, r, u, d;
 };
+
 point randomstart(WindowData& fullViewport, int road[6][8]) {
 	int wnum = fullViewport.wnum, hnum = fullViewport.hnum;
 	int** rh = new int* [hnum];
@@ -34,25 +48,17 @@ point randomstart(WindowData& fullViewport, int road[6][8]) {
 		if (p.x >= 1 && p.x < wnum - 1) {
 			if (rh[p.y][p.x - 1] == 1)
 				p.exist = 1;
-			else
-				p.exist = 0;
 			if (rh[p.y][p.x] == 1)
 				p.exist = 1;
-			else
-				p.exist = 0;
 		}
 		else if (p.x == 0 || p.x == wnum - 1) {
 			if (p.x == 0) {
 				if (rh[p.y][p.x] == 1)
 					p.exist = 1;
-				else
-					p.exist = 0;
 			}
 			else {
 				if (rh[p.y][p.x - 1] == 1)
 					p.exist = 1;
-				else
-					p.exist = 0;
 			}
 		}
 		if (!p.exist)
@@ -60,25 +66,17 @@ point randomstart(WindowData& fullViewport, int road[6][8]) {
 		if (p.y >= 1 && p.y < hnum - 1) {
 			if (rv[p.y - 1][p.x] == 1)
 				p.exist = 1;
-			else
-				p.exist = 0;
 			if (rv[p.y][p.x] == 1)
 				p.exist = 1;
-			else
-				p.exist = 0;
 		}
 		else if (p.y == 0 || p.y == hnum - 1) {
 			if (p.y == 0) {
 				if (rv[p.y][p.x] == 1)
 					p.exist = 1;
-				else
-					p.exist = 0;
 			}
 			else {
 				if (rv[p.y - 1][p.x] == 1)
 					p.exist = 1;
-				else
-					p.exist = 0;
 			}
 		}
 	}
@@ -91,7 +89,7 @@ point randomstart(WindowData& fullViewport, int road[6][8]) {
 	return p;
 }
 char* randpath(WindowData& fullViewport, point startp, int& n) {
-	n = 1 + rand() % 15;
+	n = 3 + rand() % 13;
 	printf("%d\n", n);
 	int stop = 0;
 	char* path = new char[n + 1];
@@ -385,77 +383,8 @@ char* randpath(WindowData& fullViewport, point startp, int& n) {
 	delete[]rv;
 	return path;
 }
-void createRandomCar(CarData& car, WindowData& fullViewport, bool windowChange, point start, int type, ImageData car_pic[]) {
-	int width = fullViewport.w, height = fullViewport.h, wnum = fullViewport.wnum, hnum = fullViewport.hnum, oldw = fullViewport.oldw, oldh = fullViewport.oldh;
-	if (windowChange && car.velocity >= 0) {
-		if (!car.intersect) {
-			if (car.path[car.i] % 2) {
-				car.x = (int)car.x + 0.5;
-			}
-			else {
-				car.y = (int)car.y + 0.5;
-			}
-		}
-		else {
-			if ((car.path[car.i] + 3) % 4 == car.path[car.i + 1]) {   //turn right
-				car.x = (int)car.x + 0.5;
-				car.y = (int)car.y + 0.5;
-				(car.angle) = (car.angle + 5 + 360) % 360;
-				switch (car.path[car.i]) {
-				case 0:			//270-360 sin<0, cos>0
-					car.x -= (1. / 10) * sin(car.angle * M_PI / 180);
-					car.y -= (1. / 6) * cos(car.angle * M_PI / 180);
-					break;
-				case 1:			//180-270 sin<0 cos<0
-					car.x += (1. / 10) * sin(car.angle * M_PI / 180);
-					car.y += (1. / 6) * cos(car.angle * M_PI / 180);
-					break;
-				case 2:			//90-180 sin>0 cos<0
-					car.x -= (1. / 10) * sin(car.angle * M_PI / 180);
-					car.y -= (1. / 6) * cos(car.angle * M_PI / 180);
-					break;
-				case 3:			//0-90 sin>0 cos>0
-					car.x += (1. / 10) * sin(car.angle * M_PI / 180);
-					car.y += (1. / 6) * cos(car.angle * M_PI / 180);
-					break;
-				}
-
-			}
-			else if ((car.path[car.i] + 1) % 4 == car.path[car.i + 1]) {  //turn left
-				car.x = (int)car.x + 0.5;
-				car.y = (int)car.y + 0.5;
-				(car.angle) = (car.angle - 5 + 360) % 360;
-				switch (car.path[car.i]) {
-				case 0:			//270-180 sin<0, cos<0
-					car.x -= (1. / 10) * sin(car.angle * M_PI / 180);
-					car.y -= (1. / 6) * cos(car.angle * M_PI / 180);
-					break;
-				case 1:			//180-90 sin>0 cos<0
-					car.x += (1. / 10) * sin(car.angle * M_PI / 180);
-					car.y += (1. / 6) * cos(car.angle * M_PI / 180);
-					break;
-				case 2:			//90-0 sin>0 cos>0
-					car.x -= (1. / 10) * sin(car.angle * M_PI / 180);
-					car.y -= (1. / 6) * cos(car.angle * M_PI / 180);
-					break;
-				case 3:			//0-270 sin<0 cos>0
-					car.x += (1. / 10) * sin(car.angle * M_PI / 180);
-					car.y += (1. / 6) * cos(car.angle * M_PI / 180);
-					break;
-				}
-			}
-			else {
-				if (car.path[car.i] % 2) {
-					car.x = (int)car.x + 0.5;
-				}
-				else {
-					car.y = (int)car.y + 0.5;
-				}
-			}
-		}
-		car.velocity = sqrt(car.velocity * car.velocity * width * height / oldw / oldh);
-		return;
-	}
+void createRandomCar(CarData& car, WindowData& fullViewport, point start, ImageData &car_pic) {
+	int width = fullViewport.w, height = fullViewport.h, wnum = fullViewport.wnum, hnum = fullViewport.hnum;
 	int length;
 	car.x = 0.5 + start.x;
 	car.y = 0.5 + start.y;
@@ -463,13 +392,13 @@ void createRandomCar(CarData& car, WindowData& fullViewport, bool windowChange, 
 	do {
 		car.path = randpath(fullViewport, start, length);
 	} while ((car.path == NULL) || (length < 2) || (car.path[0] == -1));
-	for (int i = 0; i <= length; i++)
-		printf("path[%d]=%d\n", i, car.path[i]);
+	//for (int i = 0; i <= length; i++)
+	//	printf("path[%d]=%d\n", i, car.path[i]);
 	car.length = length;
 	car.window = &fullViewport;
-	car.img = &(car_pic[type]);
+	car.img = &car_pic;
 	car.i = 0;
 	car.angle = (3 - car.path[0]) * 90;
-	car.velocity = 0.01;
+	car.velocity = 0.002*(rand()%10+5);
 	car.intersect = true;
 }
