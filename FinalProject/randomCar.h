@@ -90,7 +90,7 @@ point randomstart(WindowData& fullViewport, int road[6][8]) {
 }
 char* randpath(WindowData& fullViewport, point startp, int& n) {
 	n = 3 + rand() % 13;
-	printf("%d\n", n);
+	//printf("%d\n", n);
 	int stop = 0;
 	char* path = new char[n + 1];
 	int wnum = fullViewport.wnum, hnum = fullViewport.hnum;
@@ -358,7 +358,7 @@ char* randpath(WindowData& fullViewport, point startp, int& n) {
 				n = stop;
 				break;
 			}
-			printf("x=%d y=%d path=%d\n", p.x, p.y, path[i]);
+			//printf("x=%d y=%d path=%d\n", p.x, p.y, path[i]);
 			switch (path[i]) {
 			case 0:
 				p.x--;

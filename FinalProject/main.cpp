@@ -109,11 +109,11 @@ int main(int argc, char* args[])
 		car[i].velocity = -1;
 	}
 	for (int i = 0; i < RANDCARNUM; i++) {
-		printf("%d\n", i);
+		//printf("%d\n", i);
 		do {
 			repeat = false;
 			start[i] = randomstart(fullViewport, road);
-			printf("%d %d\n", start[i].x, start[i].y);
+			//printf("%d %d\n", start[i].x, start[i].y);
 			for (int j = 0; j <i; j++)
 				if ((start[j].x == start[i].x)&& (start[j].y == start[i].y)) {
 					repeat = true;

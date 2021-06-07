@@ -64,7 +64,7 @@ int initSDL(SDL_Window*& window, SDL_Renderer*& renderer) {
 
 	// Create window	
 	// SDL_WINDOWPOS_UNDEFINED: Used to indicate that you don't care what the window position is.
-	window = SDL_CreateWindow("City Housekeeper", 50, 50, 960, 540, SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_RESIZABLE);
+	window = SDL_CreateWindow("City Housekeeper", 50, 50, 960, 480, SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_RESIZABLE);
 	if (window == NULL)
 	{
 		printf("SDL_CreateWindow failed: %s\n", SDL_GetError());
