@@ -1,14 +1,14 @@
 #include<limits.h>
 
 
-int carMenu(SDL_Renderer* renderer, WindowData fullViewport, MouseState mouseState, int mousex, int mousey, int& choose, ImageData car_pic[]);
-void bestRoute(WindowData& fullViewport, int** distance, int y, int x, int direction);
+int carMenu(SDL_Renderer* renderer, const WindowData& fullViewport, MouseState mouseState, int mousex, int mousey, int& choose, ImageData car_pic[]);
+void bestRoute(const WindowData& fullViewport, int** distance, int y, int x, int direction);
 bool existDirection(int hnum, int wnum, int y, int x, int direction);
-char* createPath(WindowData& fullViewport, int start_xnum, int start_ynum, bool verticle, int house_hnum, int house_wnum, int& length);
+char* createPath(const WindowData& fullViewport, int start_xnum, int start_ynum, bool verticle, int house_hnum, int house_wnum, int& length);
 void fillIntersect(char* intersect, int direction1, int direction2, int num);
 bool equalIntersect(char* intersect, int direction1, int direction2, int num);
 
-void createCar(CarData& car, WindowData& fullViewport, bool windowChange, int start_ynum, int start_xnum, int house_hnum, int house_wnum, int type, ImageData car_pic[]) {
+void createCar(CarData& car, WindowData& fullViewport, int start_ynum, int start_xnum, int house_hnum, int house_wnum, int type, ImageData car_pic[]) {
 	int width = fullViewport.w, height = fullViewport.h, wnum = fullViewport.wnum, hnum = fullViewport.hnum, oldw=fullViewport.oldw, oldh=fullViewport.oldh;
 
 	char* path;
@@ -86,7 +86,7 @@ void createCar(CarData& car, WindowData& fullViewport, bool windowChange, int st
 	car.intersect = false;
 }
 
-int addCar(SDL_Renderer* renderer, WindowData fullViewport, MouseState mouseState, int mousex, int mousey, Building** build , CarData car[], ImageData car_pic[]) {
+int addCar(SDL_Renderer* renderer, WindowData& fullViewport, MouseState mouseState, int mousex, int mousey, Building** build , CarData car[], ImageData car_pic[]) {
 	int width = fullViewport.w, height = fullViewport.h, wnum = fullViewport.wnum, hnum = fullViewport.hnum, xnum, ynum;
 	static int choose = 0, select=0;
 	static SDL_TimerID timerID_clock;
@@ -123,7 +123,7 @@ int addCar(SDL_Renderer* renderer, WindowData fullViewport, MouseState mouseStat
 						for (int i = 0; i < hnum-1; i++)
 							for (int j = 0; j < wnum-1; j++)
 								if (build[i][j].type == FireSta) {
-									createCar(t, fullViewport, false, i, j, ynum, xnum, choose + 2, car_pic);
+									createCar(t, fullViewport, i, j, ynum, xnum, choose + 2, car_pic);
 									if (t.length < car[choose - 1].length)
 										car[choose - 1] = t;
 									choose = 0;
@@ -133,7 +133,7 @@ int addCar(SDL_Renderer* renderer, WindowData fullViewport, MouseState mouseStat
 						for (int i = 0; i < hnum-1; i++)
 							for (int j = 0; j < wnum-1; j++)
 								if (build[i][j].type == Logistics) {
-									createCar(t, fullViewport, false, i, j, ynum, xnum, 5, car_pic);
+									createCar(t, fullViewport, i, j, ynum, xnum, 5, car_pic);
 									if (t.length < car[choose - 1].length)
 										car[choose - 1] = t;
 									choose = 0;
@@ -143,7 +143,7 @@ int addCar(SDL_Renderer* renderer, WindowData fullViewport, MouseState mouseStat
 						for (int i = 0; i < hnum-1; i++)
 							for (int j = 0; j < wnum-1; j++)
 								if (build[i][j].type == PoliceOff) {
-									createCar(t, fullViewport, false, i, j, ynum, xnum, 7, car_pic);
+									createCar(t, fullViewport, i, j, ynum, xnum, 7, car_pic);
 									if (t.length < car[choose - 1].length)
 										car[choose - 1] = t;
 									choose = 0;
@@ -180,7 +180,7 @@ int addCar(SDL_Renderer* renderer, WindowData fullViewport, MouseState mouseStat
 	return 0;
 }
 
-int carMenu(SDL_Renderer* renderer, WindowData fullViewport, MouseState mouseState, int mousex, int mousey, int& choose, ImageData car_pic[]) {
+int carMenu(SDL_Renderer* renderer, const WindowData& fullViewport, MouseState mouseState, int mousex, int mousey, int& choose, ImageData car_pic[]) {
 	int width = fullViewport.w, height = fullViewport.h;
 	boxColor(renderer, 0, height / 12, width - height/ 12, height, 0xBB000000);
 	imgRender(renderer, car_pic[3], RightBottom, width / 2 - 10, height / 2 - 10, NULL, height / 3, 1, NULL, NULL, 0, no, 250);
@@ -222,24 +222,18 @@ int carMenu(SDL_Renderer* renderer, WindowData fullViewport, MouseState mouseSta
 	return 1;
 }
 
-void carRender(SDL_Renderer* renderer, WindowData fullViewport, CarData& car) {
-	int width = fullViewport.w, height = fullViewport.h, hnum=fullViewport.hnum, wnum=fullViewport.wnum;
-	if (car.velocity == -1) {
-		if (!car.path) {
-			delete[]car.path;
-			car.path = NULL;
+void carRender(SDL_Renderer* renderer, const WindowData& fullViewport, CarData car[]) {
+	int width = fullViewport.w, height = fullViewport.h, hnum = fullViewport.hnum, wnum = fullViewport.wnum;
+	for (int i = 0; i < 4 + RANDCARNUM; i++) {
+		if (car[i].velocity == -1) {
+			if (!car[i].path) {
+				delete[]car[i].path;
+				car[i].path = NULL;
+			}
+			continue;
 		}
-		return;
+		imgRender(renderer, *(car[i].img), Left, car[i].x * (width - height / 12) / wnum, car[i].y * (height * 11 / 12) / hnum + (height / 12), fmin((width - height / 12) / wnum / 10., height * 11 / 12 / hnum / 6.), NULL, 1, NULL, NULL, car[i].angle, no, 255);
 	}
-	if (car.x<0.5 || car.x>wnum - 0.5 || car.y<0.5 || car.y>hnum - 0.5) {
-		car.velocity = -1;
-		if (!car.path) {
-			delete[]car.path;
-			car.path = NULL;
-		}
-		return;
-	}
-	imgRender(renderer, *(car.img), Left, car.x*(width-height/12)/wnum, car.y*(height*11/12)/hnum+(height/12), fmin((width-height/12)/wnum/10., height*11/12/hnum/6.), NULL, 1, NULL, NULL, car.angle, no, 255);
 }
 
 Uint32 car_move(Uint32 interval, void* param)
@@ -248,7 +242,7 @@ Uint32 car_move(Uint32 interval, void* param)
 	int width = t[4].window->w, height = t[4].window->h, wnum = t[4].window->wnum, hnum = t[4].window->hnum;
 	static char*** CarIntersect = NULL;
 	if (CarIntersect == NULL) {
-		CarIntersect = new char** [hnum] {NULL};
+		CarIntersect = new char** [hnum];
 		for (int i = 0; i < hnum; i++) {
 			CarIntersect[i] = new char* [wnum];
 			for (int j = 0; j < wnum; j++) {
@@ -260,7 +254,14 @@ Uint32 car_move(Uint32 interval, void* param)
 	}
 
 	for (int i = 0; i < RANDCARNUM + 4; i++) {
-
+		if (t[i].x<0.45 || t[i].x>wnum - 0.45 || t[i].y<0.45 || t[i].y>hnum - 0.45) {
+			t[i].velocity = -1;
+			for (int j = 0; j < hnum; j++)
+				for (int k = 0; k < wnum; k++)
+					for (int l = 0; l < 4; l++)
+						if (CarIntersect[j][k][l] == i + 1)
+							CarIntersect[j][k][l] = 0;
+		}
 		//printf("%d\n", i);
 		//If velocity =-1, car disappear
 		if (t[i].velocity == -1) {
@@ -299,7 +300,6 @@ Uint32 car_move(Uint32 interval, void* param)
 			else
 				length = 2;
 			if (t[i].angle == t[k].angle&&(t[i].angle%90==0)) {
-				int choose;
 				if (t[i].x == t[k].x && t[i].y == t[k].y)
 					if (i < k)
 						stop = false;
@@ -352,9 +352,8 @@ Uint32 car_move(Uint32 interval, void* param)
 			}
 		}
 
-		if (stop) {
+		if (stop)
 			continue;
-		}
 
 		if (!t[i].path)
 			continue;
@@ -369,22 +368,26 @@ Uint32 car_move(Uint32 interval, void* param)
 			t[i].intersect = false;
 	//		printf("1");
 			//Leave the interscetion, free the intersection
-			for (int j = 0; j < hnum; j++)
-				for (int k = 0; k < wnum; k++)
-					for(int l=0; l<4; l++)
-						if (i == 2) {	//for truck
-							if (CarIntersect[j][k][l] == i + 1 && (fabs(t[i].x - (int)t[i].x - 0.5) > 2 / 8. || fabs(t[i].y - (int)t[i].y - 0.5) > 2 / 3.)) {
+			if (i == 2&& (fabs(t[i].x - (int)t[i].x - 0.5) > 2 / 8. || fabs(t[i].y - (int)t[i].y - 0.5) >= 1 / 2.2)) {	//for truck
+				for (int j = 0; j < hnum; j++)
+					for (int k = 0; k < wnum; k++)
+						for (int l = 0; l < 4; l++)
+							if (CarIntersect[j][k][l] == i + 1)
 								CarIntersect[j][k][l] = 0;
-							}
-						}
-						else if (CarIntersect[j][k][l] == i + 1 && (fabs(t[i].x - (int)t[i].x - 0.5) > 1 / 8. || fabs(t[i].y - (int)t[i].y - 0.5) > 1 / 3.)) {
-							CarIntersect[j][k][l] = 0;
-						}
+			}
+			else{
+				if((fabs(t[i].x - (int)t[i].x - 0.5) > 1 / 8. || fabs(t[i].y - (int)t[i].y - 0.5) > 1 / 3.))
+					for (int j = 0; j < hnum; j++)
+						for (int k = 0; k < wnum; k++)
+							for (int l = 0; l < 4; l++)
+								if (CarIntersect[j][k][l] == i + 1)
+									CarIntersect[j][k][l] = 0;
+			}
 
 			//close to intersection, stop to check if there is a car
 			switch (t[i].angle % 360) {
 				case 0:
-					if (t[i].i != t[i].length&&!equalIntersect(CarIntersect[(int)(t[i].y - 0.5)][(int)t[i].x], t[i].path[t[i].i], t[i].path[t[i].i+1], 0) && (t[i].y + 0.5-(int)(t[i].y + 0.5)) < 1 / 3.) {
+					if (t[i].i != t[i].length&&!equalIntersect(CarIntersect[(int)(t[i].y - 0.5)][(int)t[i].x], t[i].path[t[i].i], t[i].path[t[i].i+1], 0) && (t[i].y + 0.5-(int)(t[i].y + 0.5)) < 1 / 4.) {
 						continue;
 					}
 					else {
@@ -393,7 +396,7 @@ Uint32 car_move(Uint32 interval, void* param)
 					}
 					break;
 				case 90:
-					if (t[i].i != t[i].length&&!equalIntersect(CarIntersect[(int)(t[i].y)][(int)(t[i].x+0.5)], t[i].path[t[i].i], t[i].path[t[i].i + 1], 0)&& (t[i].x + 0.5 - (int)(t[i].x + 0.5) )>  7/ 8.) {
+					if (t[i].i != t[i].length&&!equalIntersect(CarIntersect[(int)(t[i].y)][(int)(t[i].x+0.5)], t[i].path[t[i].i], t[i].path[t[i].i + 1], 0)&& (t[i].x + 0.5 - (int)(t[i].x + 0.5) )>  8/ 9.) {
 						continue;
 					}
 					else {
@@ -402,7 +405,7 @@ Uint32 car_move(Uint32 interval, void* param)
 					}
 					break;
 				case 180:
-					if (t[i].i != t[i].length&&!equalIntersect(CarIntersect[(int)(t[i].y + 0.5)][(int)t[i].x], t[i].path[t[i].i], t[i].path[t[i].i + 1], 0) && (t[i].y + 0.5 - (int)(t[i].y + 0.5)) > 2 / 3.) {
+					if (t[i].i != t[i].length&&!equalIntersect(CarIntersect[(int)(t[i].y + 0.5)][(int)t[i].x], t[i].path[t[i].i], t[i].path[t[i].i + 1], 0) && (t[i].y + 0.5 - (int)(t[i].y + 0.5)) > 3 / 4.) {
 						continue;
 					}
 					else {
@@ -411,7 +414,7 @@ Uint32 car_move(Uint32 interval, void* param)
 					}
 					break;
 				case 270:
-					if (t[i].i != t[i].length&&!equalIntersect(CarIntersect[(int)(t[i].y)][(int)(t[i].x-0.5)], t[i].path[t[i].i], t[i].path[t[i].i + 1], 0) && (t[i].x + 0.5 - (int)(t[i].x + 0.5)) < 1 / 8.) {
+					if (t[i].i != t[i].length&&!equalIntersect(CarIntersect[(int)(t[i].y)][(int)(t[i].x-0.5)], t[i].path[t[i].i], t[i].path[t[i].i + 1], 0) && (t[i].x + 0.5 - (int)(t[i].x + 0.5)) < 1 / 9.) {
 						continue;
 					}
 					else {
@@ -451,10 +454,15 @@ Uint32 car_move(Uint32 interval, void* param)
 								CarIntersect[j][k][l] = 0;
 				continue;
 			}
+
 			t[i].intersect = true;
-			if (!equalIntersect(CarIntersect[(int)t[i].y][(int)t[i].x], t[i].path[t[i].i], t[i].path[t[i].i+1], 0)&& !equalIntersect(CarIntersect[(int)t[i].y][(int)t[i].x], t[i].path[t[i].i], t[i].path[t[i].i+1], (i + 1)))
-				continue;
-			fillIntersect(CarIntersect[(int)t[i].y][(int)t[i].x], t[i].path[t[i].i], t[i].path[t[i].i+1], (i + 1));
+			if (!equalIntersect(CarIntersect[(int)t[i].y][(int)t[i].x], t[i].path[t[i].i], t[i].path[t[i].i + 1], (i + 1))) {
+				if (equalIntersect(CarIntersect[(int)t[i].y][(int)t[i].x], t[i].path[t[i].i], t[i].path[t[i].i + 1], 0))
+					fillIntersect(CarIntersect[(int)t[i].y][(int)t[i].x], t[i].path[t[i].i], t[i].path[t[i].i + 1], (i + 1));
+				else
+					continue;
+			}
+
 			switch (t[i].angle % 360) {
 				case 0:
 					t[i].y -= (t[i].velocity);
@@ -483,10 +491,15 @@ Uint32 car_move(Uint32 interval, void* param)
 								CarIntersect[j][k][l] = 0;
 				continue;
 			}
+
 			t[i].intersect = true;
-			if (!equalIntersect(CarIntersect[(int)t[i].y][(int)t[i].x], t[i].path[t[i].i], t[i].path[t[i].i+1], 0) && !equalIntersect(CarIntersect[(int)t[i].y][(int)t[i].x], t[i].path[t[i].i], t[i].path[t[i].i+1], (i + 1)))
-				continue; 
-			fillIntersect(CarIntersect[(int)t[i].y][(int)t[i].x], t[i].path[t[i].i], t[i].path[t[i].i+1], (i + 1));
+			if (!equalIntersect(CarIntersect[(int)t[i].y][(int)t[i].x], t[i].path[t[i].i], t[i].path[t[i].i + 1], (i + 1))) {
+				if (equalIntersect(CarIntersect[(int)t[i].y][(int)t[i].x], t[i].path[t[i].i], t[i].path[t[i].i + 1], 0))
+					fillIntersect(CarIntersect[(int)t[i].y][(int)t[i].x], t[i].path[t[i].i], t[i].path[t[i].i + 1], (i + 1));
+				else
+					continue;
+			}
+
 			t[i].x = (int)t[i].x + 0.5;
 			t[i].y = (int)t[i].y + 0.5;
 			if ((t[i].path[t[i].i] + 3) % 4 == t[i].path[t[i].i + 1]) {   //turn right
@@ -554,7 +567,7 @@ Uint32 car_move(Uint32 interval, void* param)
 	return interval;
 } 
 
-char* createPath(WindowData& fullViewport, int start_ynum,int start_xnum, bool verticle, int house_hnum, int house_wnum, int &length) {
+char* createPath(const WindowData& fullViewport, int start_ynum,int start_xnum, bool verticle, int house_hnum, int house_wnum, int &length) {
 	int wnum = fullViewport.wnum, hnum = fullViewport.hnum;
 	
 	//create diatance map
@@ -584,7 +597,6 @@ char* createPath(WindowData& fullViewport, int start_ynum,int start_xnum, bool v
 			bestRoute(fullViewport, distance, start_ynum, start_xnum + 1, 2);
 		}
 	}
-
 	//find the shortest corner to the destination
 	//top road
 	if ((checkRoad(house_hnum, house_wnum) >> 3) % 2) {		
@@ -684,28 +696,28 @@ char* createPath(WindowData& fullViewport, int start_ynum,int start_xnum, bool v
 	}
 	for (int i = length - 1; i > 0; i--) {
 		if (x > 0) {
-			if (distance[y][x - 1] == distance[y][x] - 1) {
+			if ((distance[y][x - 1] == distance[y][x] - 1) && existDirection(hnum, wnum, y, x-1, 2)) {
 				x -= 1;
 				path[i] = 2;
 				continue;
 			}
 		}
 		if(y<hnum-1){
-			if (distance[y + 1][x] == distance[y][x] - 1) {
+			if ((distance[y + 1][x] == distance[y][x] - 1)&&existDirection(hnum, wnum, y+1, x, 3)) {
 				y += 1;
 				path[i] = 3;
 				continue;
 			}
 		}
 		if(x<wnum-1){
-			if (distance[y][x + 1] == distance[y][x] - 1) {
+			if ((distance[y][x + 1] == distance[y][x] - 1)&& existDirection(hnum, wnum, y, x+1, 0)) {
 				x += 1;
 				path[i] = 0;
 				continue;
 			}
 		}
 		if(y>0){
-			if (distance[y - 1][x] == distance[y][x] - 1) {
+			if ((distance[y - 1][x] == distance[y][x] - 1)&& existDirection(hnum, wnum, y-1, x, 1)) {
 				y -= 1;
 				path[i] = 1;
 				continue;
@@ -731,28 +743,27 @@ char* createPath(WindowData& fullViewport, int start_ynum,int start_xnum, bool v
 	return path;
 }
 
-void bestRoute(WindowData& fullViewport, int **distance, int y, int x, int direction) {
+void bestRoute(const WindowData& fullViewport, int **distance, int y, int x, int direction) {
 	int wnum = fullViewport.wnum, hnum = fullViewport.hnum;
-	
-	if (direction != 1 && y > 0 && existDirection(hnum, wnum, y, x, 3)) {		//go up
+	if (direction != 1 && existDirection(hnum, wnum, y, x, 3)) {		//go up
 		if (distance[y - 1][x] > distance[y][x]) {
 			distance[y - 1][x] = distance[y][x] + 1;
 			bestRoute(fullViewport, distance, y - 1, x, 3);
 		}
 	}
-	if (direction != 3 && y < hnum - 1 && existDirection(hnum, wnum, y, x, 1)) {	//go down
+	if (direction != 3 && existDirection(hnum, wnum, y, x, 1)) {	//go down
 		if (distance[y + 1][x] > distance[y][x]) {
 			distance[y + 1][x] = distance[y][x] + 1;
 			bestRoute(fullViewport, distance, y + 1, x, 1);
 		}
 	}
-	if (direction != 2 && x > 0 && existDirection(hnum, wnum, y, x, 0)) {  //go left
+	if (direction != 2 && existDirection(hnum, wnum, y, x, 0)) {  //go left
 		if (distance[y][x - 1] > distance[y][x]) {
 			distance[y][x - 1] = distance[y][x] + 1;
 			bestRoute(fullViewport, distance, y, x - 1, 0);
 		}
 	}
-	if (direction != 0 && x < wnum - 1 && existDirection(hnum, wnum, y, x, 2)) {  //go right
+	if (direction != 0 && existDirection(hnum, wnum, y, x, 2)) {  //go right
 		if (distance[y][x + 1] > distance[y][x]) {
 			distance[y][x + 1] = distance[y][x] + 1;
 			bestRoute(fullViewport, distance, y, x + 1, 2);
@@ -763,9 +774,9 @@ void bestRoute(WindowData& fullViewport, int **distance, int y, int x, int direc
 bool existDirection(int hnum, int wnum, int y, int x, int direction) {
 	if (y == 0 && direction == 3) //go up
 		return false;
-	if (x == wnum - 1 && direction == 2)	//go right
+	if (x == wnum && direction == 2)	//go right
 		return false;
-	if (y == hnum - 1 && direction == 1)  //go down
+	if (y == hnum && direction == 1)  //go down
 		return false;
 	if (x == 0 && direction == 0)	//go left
 		return false;

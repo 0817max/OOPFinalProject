@@ -17,7 +17,7 @@ struct point {
 	int l, r, u, d;
 };
 
-point randomstart(WindowData& fullViewport, int road[6][8]) {
+point randomstart(const WindowData& fullViewport, int **road) {
 	int wnum = fullViewport.wnum, hnum = fullViewport.hnum;
 	int** rh = new int* [hnum];
 	for (int i = 0; i < hnum; i++)
@@ -88,7 +88,8 @@ point randomstart(WindowData& fullViewport, int road[6][8]) {
 	delete[]rv;
 	return p;
 }
-char* randpath(WindowData& fullViewport, point startp, int& n) {
+
+char* randpath(const WindowData& fullViewport, const point& startp, int& n) {
 	n = 3 + rand() % 13;
 	//printf("%d\n", n);
 	int stop = 0;
@@ -383,7 +384,8 @@ char* randpath(WindowData& fullViewport, point startp, int& n) {
 	delete[]rv;
 	return path;
 }
-void createRandomCar(CarData& car, WindowData& fullViewport, point start, ImageData &car_pic) {
+
+void createRandomCar(CarData& car, WindowData& fullViewport, const point& start, ImageData &car_pic) {
 	int width = fullViewport.w, height = fullViewport.h, wnum = fullViewport.wnum, hnum = fullViewport.hnum;
 	int length;
 	car.x = 0.5 + start.x;

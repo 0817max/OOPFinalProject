@@ -6,7 +6,7 @@ Uint32 clock_add(Uint32 interval, void* param)
 	return interval;
 }
 
-void controlRender(SDL_Renderer* renderer, WindowData fullViewport, bool windowChange,int t,int population, int money, int love, ImageData control_pic[], ImageData build_pic[], ImageData flag_pic) {
+void controlRender(SDL_Renderer* renderer, const WindowData& fullViewport, bool windowChange,int t,int population, int money, int love, ImageData control_pic[], ImageData build_pic[], ImageData flag_pic) {
 	int width = fullViewport.w, height=fullViewport.h;
 
 	//top
@@ -19,11 +19,27 @@ void controlRender(SDL_Renderer* renderer, WindowData fullViewport, bool windowC
 
 	//value
 	char p[10], m[10], l[10];
+	sprintf_s(p, 10, "%d", population);
+	sprintf_s(m, 10, "%d", money);
+	sprintf_s(l, 10, "%d", love);
+
+	static TextData textp = loadTextTexture(renderer, p, "../fonts/TaipeiSansTCBeta-Regular.ttf", height / 2.25 / 12, 255, 255, 255, BLENDED);
+	static TextData textm = loadTextTexture(renderer, m, "../fonts/TaipeiSansTCBeta-Regular.ttf", height / 2.25 / 12, 255, 255, 255, BLENDED);
+	static TextData textl = loadTextTexture(renderer, l, "../fonts/TaipeiSansTCBeta-Regular.ttf", height / 2.25 / 12, 255, 255, 255, BLENDED);
+
+	//free up resources
+	if (renderer == NULL) {
+		SDL_DestroyTexture(textp.texture);
+		SDL_DestroyTexture(textm.texture);
+		SDL_DestroyTexture(textl.texture);
+		SDL_DestroyTexture(control_pic[0].texture);
+		SDL_DestroyTexture(control_pic[1].texture);
+		SDL_DestroyTexture(control_pic[2].texture);
+		return;
+	}
 
 	//Population word and background
 	imgRender(renderer, control_pic[0],  RightTop, width / 6 - height / 2.25 / 12 * 0.2, height / 4 / 12 + 0.1 * height / 2.25 / 12 , NULL, height / 2.25 / 12, 1, NULL, NULL, 0, no, 255);
-	sprintf_s(p, 10, "%d", population);
-	static TextData textp = loadTextTexture(renderer, p, "../fonts/TaipeiSansTCBeta-Regular.ttf", height / 2.25 / 12, 255, 255, 255, BLENDED);
 	if (windowChange) {
 		SDL_DestroyTexture(textp.texture);
 		textp = loadTextTexture(renderer, p, "../fonts/TaipeiSansTCBeta-Regular.ttf", height / 2.25 / 12, 255, 255, 255, BLENDED);
@@ -33,8 +49,6 @@ void controlRender(SDL_Renderer* renderer, WindowData fullViewport, bool windowC
 
 	//Money word and background
 	imgRender(renderer, control_pic[1],  RightTop, width * 3 / 6 - height / 2.25 / 12 * 0.2, height / 4 / 12 + 0.1 * height / 2.25 / 12 , NULL, height / 2.25 / 12, 1, NULL, NULL, 0, no, 255);
-	sprintf_s(m, 10, "%d", money);
-	static TextData textm = loadTextTexture(renderer, m, "../fonts/TaipeiSansTCBeta-Regular.ttf", height / 2.25 / 12, 255, 255, 255, BLENDED);
 	if(windowChange) {
 		SDL_DestroyTexture(textm.texture);
 		textm = loadTextTexture(renderer, m, "../fonts/TaipeiSansTCBeta-Regular.ttf", height / 2.25 / 12, 255, 255, 255, BLENDED);
@@ -44,8 +58,6 @@ void controlRender(SDL_Renderer* renderer, WindowData fullViewport, bool windowC
 	
 	//Love word and background
 	imgRender(renderer, control_pic[2],  RightTop, width * 5 / 6 - height / 2.25 / 12 * 0.2, height / 4 / 12 + 0.1 * height / 2.25 / 12 , NULL, height / 2.25 / 12, 1, NULL, NULL, 0, no, 255);
-	sprintf_s(l, 10, "%d", love);
-	static TextData textl = loadTextTexture(renderer, l, "../fonts/TaipeiSansTCBeta-Regular.ttf", height / 2.25 / 12, 255, 255, 255, BLENDED);
 	if (windowChange) {
 		SDL_DestroyTexture(textl.texture);
 		textl = loadTextTexture(renderer, l, "../fonts/TaipeiSansTCBeta-Regular.ttf", height / 2.25 / 12, 255, 255, 255, BLENDED);
@@ -53,6 +65,8 @@ void controlRender(SDL_Renderer* renderer, WindowData fullViewport, bool windowC
 	roundedBoxColor(renderer, width * 5 / 6, height / 4 / 12, width * 5.8 / 6, height / 4 / 12 + 1.2 * textl.height, height / 50, 0xFF888888);
 	textRender(renderer, textl, Right, width * 5.8 / 6 - 0.2 * textl.width, height / 4 / 12 + 0.6 * textl.height, no, 255);
 	
+
+
 	//Right
 	//Background
 	boxColor(renderer, width-height/12, height/12, width, height, 0xFF073480);
@@ -75,18 +89,10 @@ void controlRender(SDL_Renderer* renderer, WindowData fullViewport, bool windowC
 	thickLineColor(renderer, width - height / 12, height / 12, width - height / 12, height, height / 1000 + 1, 0xFF008888);
 	thickLineColor(renderer, 0, height / 12, width, height / 12, height / 1000 + 1, 0xFF00AAAA);
 
-	//free up resources
-	if (renderer == NULL) {
-		SDL_DestroyTexture(textp.texture);
-		SDL_DestroyTexture(textm.texture);
-		SDL_DestroyTexture(textl.texture);
-		SDL_DestroyTexture(control_pic[0].texture);
-		SDL_DestroyTexture(control_pic[1].texture);
-		SDL_DestroyTexture(control_pic[2].texture);
-	}
+	
 }
 
-void incident(SDL_Renderer* renderer, WindowData fullViewport, bool windowChange, int incident_type, int alpha) {
+void incident(SDL_Renderer* renderer, const WindowData& fullViewport, bool windowChange, int incident_type, int alpha) {
 
 	if (!(alpha) || (!(incident_type)))
 		return;
@@ -100,6 +106,10 @@ void incident(SDL_Renderer* renderer, WindowData fullViewport, bool windowChange
 	static ImageData inci_pic = loadImgTexture(renderer, inci_pic_path, 1, 1, 1);
 	static TextData incident_text= loadTextTexture(renderer, incident_name[incident_type - 1], "../fonts/TaipeiSansTCBeta-Regular.ttf", height / 27, 10, 10, 10, BLENDED);
 	
+	//free up resource when closing
+	if (renderer == NULL)
+		SDL_DestroyTexture(inci_pic.texture);
+
 	//Saving Resources(Only change texture when window changes)
 	static int fromer_type;
 	if ((fromer_type != incident_type || windowChange)&&(incident_text.texture)) {
@@ -108,14 +118,12 @@ void incident(SDL_Renderer* renderer, WindowData fullViewport, bool windowChange
 		incident_text=loadTextTexture(renderer, incident_name[fromer_type-1], "../fonts/TaipeiSansTCBeta-Regular.ttf", height / 27, 10, 10, 10, BLENDED);
 	}
 
+	
 	//Incident words and background 
 	roundedBoxColor(renderer, width - 1.3 * incident_text.width-height/12, height / 12 * 1.1, width-0.1*incident_text.width-height/12, height / 12 * 1.1 + incident_text.height * 1.2, height / 50, 0x88FFFFFF);
 	textRender(renderer, incident_text, LeftTop, width - 1.2 * incident_text.width-height/12, height / 12 * 1.1 + 0.1 * incident_text.height, no, alpha);
 	imgRender(renderer, inci_pic,  LeftTop, width - 1.2 * incident_text.width - 1.2 * incident_text.height-height/12, height / 12 * 1.1 , NULL, incident_text.height * 1.2, 1, NULL, NULL, 0, no, 255);
 	
-	//free up resource when closing
-	if (renderer == NULL)
-		SDL_DestroyTexture(inci_pic.texture);
 }
 
 Uint32 incident_add(Uint32 interval, void* param)

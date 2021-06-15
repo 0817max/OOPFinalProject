@@ -10,48 +10,20 @@
 #include "House.h"
 #include "randomCar.h"
 #include "Car.h"
+#include "Event.h"
 
-int initSDL(SDL_Window*&, SDL_Renderer*&); // Starts up SDL and creates window
-void closeSDL(SDL_Window*&, SDL_Renderer*&); // Frees media and shuts down SDL
-ImageData loadImgTexture(SDL_Renderer* renderer, char* path, int num, int hn, int wn);
-TextData loadTextTexture(SDL_Renderer* renderer, const char* str, const char* fontPath, int fontSize, Uint8 fr, Uint8 fg, Uint8 fb, int textType);
-int imgRender(SDL_Renderer* renderer, ImageData img, PosPoint Pos, int posX, int posY,int w, int h, int frame, int cx, int cy, int angle, SDL_RendererFlip flip, int alpha);
-int textRender(SDL_Renderer* renderer, TextData text, PosPoint Pos, int posX, int posY, SDL_RendererFlip flip, int alpha);
-void keyboardHandleEvent(SDL_Event& e, bool &quit); // Takes key presse
-void mouseHandleEvent(SDL_Event* e, MouseState* mouseState, int* x, int* y);
-
-void controlRender(SDL_Renderer* renderer, WindowData fullViewport, bool windowChange,int t, int population, int money, int love, ImageData control_pic[], ImageData build_pic[], ImageData flag_pic);
-Uint32 clock_add(Uint32 interval, void* param);
-void incident(SDL_Renderer* renderer, WindowData fullViewport, bool windowChange, int incident_type, int alpha);
-Uint32 incident_add(Uint32 interval, void* param);
-
-void destroyRoad(int road[6][8], int hnum, int wnum);
-void mapRender(SDL_Renderer* renderer, WindowData fullViewport, ImageData road_pic, ImageData road_pic1);
-int checkRoad(int y_num, int x_num);
-void destroyRoad(int road[6][8], int hnum, int wnum);
-int checkIntersect(WindowData fullViewport, int road[6][8], int y, int x);
-
-void createBuilding(Building**& build, WindowData fullViewport, int road[6][8]);
-int addBuild(SDL_Renderer* renderer, WindowData fullViewport, MouseState mouseState, int mousex, int mousey, Building** build, ImageData build_pic[]);
-void buildRender(SDL_Renderer* renderer, WindowData fullViewport, Building** build, ImageData build_pic);
-
-void createCar(CarData& car, WindowData& fullViewport, bool windowChange, int start_ynum, int start_xnum, int house_hnum, int house_wnum, int type, ImageData car_pic[]);
-void carRender(SDL_Renderer* renderer, WindowData fullViewport, CarData& car);
-Uint32 car_move(Uint32 interval, void* param);
 
 SDL_Window* window = NULL; // The window we'll be rendering to
 SDL_Renderer* renderer = NULL; // The window rendererint initSDL()   int w:1;
 
-int width, height;
 int population, love, money;
 int t = 0;
 bool windowChange = false;
 
 
-WindowData fullViewport = { 0, 0, 8,6 , 1, 1};
+WindowData fullViewport = { 0, 0, 8, 6, 1, 1};
 
 Building** build=NULL;
-
 
 
 // When using SDL, you have to use "int main(int argc, char* args[])"
@@ -79,6 +51,7 @@ int main(int argc, char* args[])
 	SDL_TimerID timerID_clock = SDL_AddTimer(10, clock_add, &t);
 	SDL_TimerID timerID_incident;
 	SDL_TimerID timerID_car;
+	SDL_TimerID timerID_event;
 
 	//load images
 	char control_pic_path[3][100] = { "../images/pop_value.png", "../images/money_value.png","../images/love_value.png" };
@@ -98,12 +71,16 @@ int main(int argc, char* args[])
 	ImageData car_pic[8];
 	for (int i = 0; i < 8; i++)
 		car_pic[i] = loadImgTexture(renderer, car_pic_path[i], 1, 1, 1);
+	ImageData fire = loadImgTexture(renderer, (char*)"../images/fire.png", 1, 1, 1);
 
+	createRandomMap(fullViewport, road, RoadLength);
+	destroyRoad(road, fullViewport.hnum, fullViewport.wnum);
+	createBuilding(build, fullViewport, road);
 
 	int next_inci, inci=0, inci_alpha=0, path_length;
 
 	CarData car[RANDCARNUM+4];
-	point start[RANDCARNUM];
+	point *start=new point [RANDCARNUM];
 	bool repeat = false;
 	for (int i = 0; i < RANDCARNUM + 4; i++) {
 		car[i].velocity = -1;
@@ -123,21 +100,22 @@ int main(int argc, char* args[])
 	}
 	for (int i = 4; i < RANDCARNUM + 4; i++)
 		createRandomCar(car[i], fullViewport, start[i-4], car_pic[rand() % 3]);
-	timerID_car = SDL_AddTimer(15, car_move, car);
+	delete[]start;
 
-	createBuilding(build, fullViewport, road);
-	destroyRoad(road, 6, 8);
+	//EventData event;
+	//event.level = 1, event.season=0;
+	//createEvent(event, fullViewport);
+
+
+	timerID_car = SDL_AddTimer(15, car_move, car);
+	//timerID_event = SDL_AddTimer(100, event_change, &event);
 
 	
 	//While application is running
 	while (!quit)
 	{
-		SDL_GL_GetDrawableSize(window, &width, &height);
-		if (width != fullViewport.w || height != fullViewport.h) {
-			fullViewport.oldw=fullViewport.w;
-			fullViewport.oldh=fullViewport.h;
-			fullViewport.w = width;
-			fullViewport.h = height;
+		SDL_GL_GetDrawableSize(window, &(fullViewport.w), &(fullViewport.h));
+		if (fullViewport.oldw != fullViewport.w || fullViewport.oldh != fullViewport.h) {
 			windowChange = true;
 		}
 		else {
@@ -166,14 +144,8 @@ int main(int argc, char* args[])
 		//draw screen
 		mapRender(renderer, fullViewport, road_pic, road_pic1); 
 		controlRender(renderer, fullViewport, windowChange, t, population, money, love, control_pic, build_pic, flag_pic);
-		if (windowChange) {
-			createBuilding(build, fullViewport, road);
-		}
 		buildRender(renderer, fullViewport, build, build_pic);
-		for (int i = 0; i < RANDCARNUM + 4; i++) {
-			carRender(renderer, fullViewport, car[i]);
-		}
-		//carRender(renderer, fullViewport, randomcar);
+		carRender(renderer, fullViewport, car);
 		incident(renderer, fullViewport, windowChange, inci, inci_alpha);
 		next_inci = addCar(renderer, fullViewport, mouseState, mouseX, mouseY, build, car, car_pic);
 		next_inci += addBuild(renderer, fullViewport, mouseState, mouseX, mouseY, build, build_pic);
@@ -186,6 +158,8 @@ int main(int argc, char* args[])
 			else if (inci&&(!inci_alpha))
 				inci = 0;
 		}
+		//eventRender(renderer, fullViewport, event);
+		
 		// Update screen
 		SDL_RenderPresent(renderer);
 	}	
@@ -193,6 +167,7 @@ int main(int argc, char* args[])
 	//Free resources and close SDL
 	SDL_RemoveTimer(timerID_clock);
 	SDL_RemoveTimer(timerID_car);
+	//SDL_RemoveTimer(timerID_event);
 	incident(NULL, fullViewport, windowChange, inci, inci_alpha);
 	mapRender(NULL, fullViewport, road_pic, road_pic1);
 	controlRender(NULL, fullViewport, windowChange, t, population, money, love, control_pic, build_pic, flag_pic);

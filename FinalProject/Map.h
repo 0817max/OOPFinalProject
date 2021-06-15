@@ -1,14 +1,188 @@
 //0x: up right bottom left
-int road[6][8] = {
+/*int road[6][8] = {
 	{0x0000,0x0010,0x0000,0x0010,0x0000,0x0000,0x0110,0x0111},
 	{0x0000,0x1110,0x0101,0x1011,0x0100,0x0101,0x1011,0x0000},
 	{0x0000,0x1000,0x0000,0x1110,0x0101,0x0101,0x1001,0x0000},
 	{0x0100,0x0111,0x0101,0x1101,0x0101,0x0111,0x0101,0x0011},
 	{0x0000,0x1010,0x0000,0x0100,0x0111,0x1001,0x0000,0x1010},
 	{0x0000,0x1000,0x0100,0x0101,0x1001,0x0100,0x0101,0x1001}
-};
+};*/
+#define RoadLength 45
 
-void mapRender(SDL_Renderer* renderer, WindowData fullViewport, ImageData road_pic, ImageData road_pic1) {
+int** road=NULL;
+
+int randomDirection(WindowData& fullViewport, int x, int y, int pastDirection) {
+	int wnum = fullViewport.wnum, hnum = fullViewport.hnum, direction;
+	if (x == 0) {
+		if (y == 0) {
+			switch (rand() % 3) {
+			case 0:
+				direction = (pastDirection == 1) ? 1 : 2;
+				break;
+			case 1:
+			case 2:
+				direction = (pastDirection == 1) ? 2 : 1;
+				break;
+			}
+		}
+		else if (y == hnum - 1) {
+			switch (rand() % 3) {
+			case 0:
+				direction = (pastDirection == 2) ? 2 : 3;
+				break;
+			case 1:
+			case 2:
+				direction = (pastDirection == 2) ? 3 : 2;
+				break;
+			}
+		}
+		else {
+			switch (rand() % 5) {
+			case 0:
+				direction = (pastDirection == 1) ? 1: ((pastDirection == 2) ? 2 : 3);
+				break;
+			case 1:
+			case 2:
+				direction = (pastDirection == 1) ? 2 : ((pastDirection == 2) ? 3 : 1);
+				break;
+			case 3:
+			case 4:
+				direction = (pastDirection == 1) ? 3 : ((pastDirection == 2) ? 1: 2);
+				break;
+			}
+		}
+	}
+	else if (x == wnum - 1) {
+		if (y == 0) {
+			switch (rand() % 3) {
+			case 0:
+				direction = (pastDirection == 0) ? 0 : 1;
+				break;
+			case 1:
+			case 2:
+				direction = (pastDirection == 0) ? 1 : 0;
+				break;
+			}
+		}
+		else if (y == hnum - 1) {
+			switch (rand() % 3) {
+			case 0:
+				direction = (pastDirection == 0) ? 0 : 3;
+				break;
+			case 1:
+			case 2:
+				direction = (pastDirection == 0) ? 3 : 0;
+				break;
+
+			}
+		}
+		else {
+			switch (rand() % 5) {
+			case 0:
+				direction = (pastDirection == 0) ? 0 : ((pastDirection == 1) ? 1 : 3);
+				break;
+			case 1:
+			case 2:
+				direction = (pastDirection == 0) ? 1 : ((pastDirection == 1) ? 3 : 0);
+				break;
+			case 3:
+			case 4:
+				direction = (pastDirection == 0) ? 3 : ((pastDirection == 1) ? 0 : 1);
+				break;
+			}
+		}
+	}
+	else {
+		if (y == 0) {
+			switch (rand() % 5) {
+			case 0:
+				direction = (pastDirection == 0) ? 0 : ((pastDirection == 1) ? 1 : 2);
+				break;
+			case 1:
+			case 2:
+				direction = (pastDirection == 0) ? 1 : ((pastDirection == 1) ? 2 : 0);
+				break;
+			case 3:
+			case 4:
+				direction = (pastDirection == 0) ? 2 : ((pastDirection == 1) ? 0 : 1);
+				break;
+			}
+		}
+		else if (y == hnum - 1) {
+			switch (rand() % 5) {
+			case 0:
+				direction = (pastDirection == 0) ? 0 : ((pastDirection == 2) ? 2 : 3);
+				break;
+			case 1:
+			case 2:
+				direction = (pastDirection == 0) ? 2 : ((pastDirection == 2) ? 3 : 0);
+				break;
+			case 3:
+			case 4:
+				direction = (pastDirection == 0) ? 3 : ((pastDirection == 2) ? 0 : 2);
+				break;
+			}
+		}
+		else {
+			switch (rand() % 7) {
+			case 0:
+				direction = (pastDirection == 0) ? 0 : ((pastDirection == 1) ? 1 : ((pastDirection == 2) ? 2 : 3));
+				break;
+			case 1:
+			case 2:
+				direction = (1 + pastDirection)%4;
+				break;
+			case 3:
+			case 4:
+				direction = (2 + pastDirection) % 4;
+				break;
+			case 5:
+			case 6:
+				direction = (3 + pastDirection) % 4;
+				break;
+			}
+		}
+	}
+	return direction;
+}
+
+void createRandomMap(WindowData& fullViewport, int** &road, int length) {
+	int wnum = fullViewport.wnum, hnum = fullViewport.hnum;
+	road = new int* [hnum];
+	for (int i = 0; i < hnum; i++) {
+		road[i] = new int[wnum];
+		for (int j = 0; j < wnum; j++)
+			road[i][j] = 0;
+	}
+	int x = rand() % wnum, y = rand() % hnum, direction, i = 0;
+	direction = randomDirection(fullViewport, x, y, rand() % 3);
+	while (i < length) {
+		if (((road[y][x] >> (direction * 4)) % 2) == 0) {
+			i++;
+			road[y][x] += (1 << (direction * 4));
+		}
+		switch (direction) {
+			case 0:
+				x--;
+				break;
+			case 1:
+				y++;
+				break;
+			case 2:
+				x++;
+				break;
+			case 3:
+				y--;
+				break;
+		}
+		if (((road[y][x] >> ((direction+2)%4 * 4)) % 2) == 0)
+			road[y][x] += (1 << ((direction+2)%4 * 4));
+		direction = randomDirection(fullViewport, x, y, direction);
+	}
+}
+
+
+void mapRender(SDL_Renderer* renderer, WindowData& fullViewport, ImageData& road_pic, ImageData& road_pic1) {
 	int width = fullViewport.w, height=fullViewport.h, wnum=fullViewport.wnum, hnum=fullViewport.hnum;
 	
 	//free up resource
@@ -92,7 +266,7 @@ int checkRoad(int y_num, int x_num) {
 	return t;
 }
 
-void destroyRoad(int road[6][8], int hnum, int wnum) {
+void destroyRoad(int** road, int hnum, int wnum) {
 	for (int i = 0; i < hnum-1 ; i++)
 		for (int j = 0; j < wnum-1 ; j++) {
 			//Top Road
@@ -129,7 +303,7 @@ void destroyRoad(int road[6][8], int hnum, int wnum) {
 		}
 }
 
-int checkIntersect(WindowData fullViewport, int road[6][8], double y, double x) {
+int checkIntersect(const WindowData& fullViewport, int **road, double y, double x) {
 	int width = fullViewport.w, height = fullViewport.h, wnum = fullViewport.wnum, hnum = fullViewport.hnum;
 	if (x < 0.5 || y < 0.5 || x>wnum - 0.5 || y>hnum - 0.5)
 		return 1;

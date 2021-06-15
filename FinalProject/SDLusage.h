@@ -233,7 +233,7 @@ TextData loadTextTexture(SDL_Renderer* renderer, const char* str, const char* fo
 	}
 }
 
-int imgRender(SDL_Renderer* renderer, ImageData img, PosPoint Pos,  int posX, int posY, int w, int h, int frame,int cx, int cy, int angle, SDL_RendererFlip flip, int alpha)
+int imgRender(SDL_Renderer* renderer, const ImageData& img, const PosPoint& Pos,  int posX, int posY, int w, int h, int frame,int cx, int cy, int angle, SDL_RendererFlip flip, int alpha)
 {
 	int wc = frame % img.wn;
 	int hc = frame / img.wn;
@@ -309,7 +309,7 @@ int imgRender(SDL_Renderer* renderer, ImageData img, PosPoint Pos,  int posX, in
 	return 1;
 }
 
-int textRender(SDL_Renderer* renderer, TextData text, PosPoint Pos, int posX, int posY, SDL_RendererFlip flip, int alpha)
+int textRender(SDL_Renderer* renderer, const TextData& text, const PosPoint& Pos, int posX, int posY, SDL_RendererFlip flip, int alpha)
 {
 	SDL_Rect r;
 	r.w = text.width;
