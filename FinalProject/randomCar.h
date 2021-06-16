@@ -1,91 +1,83 @@
-#define RANDCARNUM 28
-struct CarData
-{
-	double x, y;	//x:0.5~(wnum-0.5), y:0.5~(hnum-0.5)
-	WindowData* window;
-	ImageData* img;
-	int i;	//start from 0 to length-1
-	char* path;  //up: 3, right: 2, down: 1, left: 0
-	int length;
-	int angle;
-	double velocity;  //-1:no car
-	bool intersect;
-};
+#define CARNUM 36
+#define INITAILlRANDOMCARNUM 32
 struct point {
 	int x, y;
 	bool exist;
 	int l, r, u, d;
 };
 
+point randomstart(const WindowData& fullViewport, int** road);
+void createRandomCar(CarData& car, WindowData& fullViewport, const point& start);
+
+int initCar(WindowData* fullViewport, CarData car[], Building **build) {
+	point* start = new point[INITAILlRANDOMCARNUM];
+	bool repeat = false;
+	int count = 0;
+	for (int i = 0; i < CARNUM; i++) {
+		car[i].x = car[i].y = 0.5;
+		car[i].window = fullViewport;
+		car[i].path = NULL;
+		car[i].i = car[i].length = car[i].angle = car[i].type = 0;
+		car[i].home_xnum = car[i].home_ynum = 0;
+		car[i].velocity = -1;
+		car[i].intersect = false;
+	}
+	for (int x = 0; x < fullViewport->wnum - 1; x++)
+		for (int y = 0; y < fullViewport->hnum - 1; y++)
+			if (build[y][x].type == FireSta) {
+				car[0].type = 1;
+				car[1].type = 2;
+				car[0].velocity = car[1].velocity = -1;
+				car[0].home_xnum = car[1].home_xnum = x;
+				car[0].home_ynum = car[1].home_ynum = y;
+			}
+			else if (build[y][x].type == Logistics) {
+				car[2].type = 3;
+				car[2].velocity = -1;
+				car[2].home_xnum = x;
+				car[2].home_ynum = y;
+			}
+			else if (build[y][x].type == PoliceOff) {
+				car[3].type = 4;
+				car[3].velocity = -1;
+				car[3].home_xnum = x;
+				car[3].home_ynum = y;
+			}
+	for (int i = 0; i < INITAILlRANDOMCARNUM; i++) {
+		//printf("%d\n", i);
+		count = 0;
+		do {
+			repeat = false;
+			start[i] = randomstart(*fullViewport, road);
+			//printf("%d %d\n", start[i].x, start[i].y);
+			for (int j = 0; j < i; j++)
+				if ((start[j].x == start[i].x) && (start[j].y == start[i].y)) {
+					repeat = true;
+					break;
+				}
+			count++;
+			if (count >= 1e2)
+				return count;
+		} while (repeat);
+	}
+	for (int i = 0; i < INITAILlRANDOMCARNUM; i++)
+		createRandomCar(car[i + 4], *fullViewport, start[i]);
+	delete[]start;
+	return 0;
+}
+
 point randomstart(const WindowData& fullViewport, int **road) {
 	int wnum = fullViewport.wnum, hnum = fullViewport.hnum;
-	int** rh = new int* [hnum];
-	for (int i = 0; i < hnum; i++)
-		rh[i] = new int[wnum - 1];
-	int** rv = new int* [hnum - 1];
-	for (int i = 0; i < hnum - 1; i++)
-		rv[i] = new int[wnum];
-	for (int i = 0; i < hnum; i++) //horizontal road
-		for (int j = 0; j < wnum - 1; j++) {
-			if (((road[i][j] >> 8) % 2) * (road[i][j + 1] % 2))
-				rh[i][j] = 1;
-			else
-				rh[i][j] = 0;
-		}
-	for (int j = 0; j < wnum; j++) //vertical road
-		for (int i = 0; i < hnum - 1; i++) {
-			if (((road[i][j] >> 4) % 2) * ((road[i + 1][j] >> 12) % 2))
-				rv[i][j] = 1;
-			else
-				rv[i][j] = 0;
-		}
+
 	point p;
 	p.exist = false;
 	while (!p.exist) {
 		p.x = rand() % wnum;
 		p.y = rand() % hnum;
 		p.exist = false;
-		if (p.x >= 1 && p.x < wnum - 1) {
-			if (rh[p.y][p.x - 1] == 1)
-				p.exist = 1;
-			if (rh[p.y][p.x] == 1)
-				p.exist = 1;
-		}
-		else if (p.x == 0 || p.x == wnum - 1) {
-			if (p.x == 0) {
-				if (rh[p.y][p.x] == 1)
-					p.exist = 1;
-			}
-			else {
-				if (rh[p.y][p.x - 1] == 1)
-					p.exist = 1;
-			}
-		}
-		if (!p.exist)
-			continue;
-		if (p.y >= 1 && p.y < hnum - 1) {
-			if (rv[p.y - 1][p.x] == 1)
-				p.exist = 1;
-			if (rv[p.y][p.x] == 1)
-				p.exist = 1;
-		}
-		else if (p.y == 0 || p.y == hnum - 1) {
-			if (p.y == 0) {
-				if (rv[p.y][p.x] == 1)
-					p.exist = 1;
-			}
-			else {
-				if (rv[p.y - 1][p.x] == 1)
-					p.exist = 1;
-			}
-		}
+		if (road[p.y][p.x])
+			p.exist = true;
 	}
-	for (int i = 0; i < hnum; i++)
-		delete rh[i];
-	for (int i = 0; i < hnum - 1; i++)
-		delete rv[i];
-	delete[]rh;
-	delete[]rv;
 	return p;
 }
 
@@ -385,7 +377,7 @@ char* randpath(const WindowData& fullViewport, const point& startp, int& n) {
 	return path;
 }
 
-void createRandomCar(CarData& car, WindowData& fullViewport, const point& start, ImageData &car_pic) {
+void createRandomCar(CarData& car, WindowData& fullViewport, const point& start) {
 	int width = fullViewport.w, height = fullViewport.h, wnum = fullViewport.wnum, hnum = fullViewport.hnum;
 	int length;
 	car.x = 0.5 + start.x;
@@ -398,9 +390,9 @@ void createRandomCar(CarData& car, WindowData& fullViewport, const point& start,
 	//	printf("path[%d]=%d\n", i, car.path[i]);
 	car.length = length;
 	car.window = &fullViewport;
-	car.img = &car_pic;
 	car.i = 0;
 	car.angle = (3 - car.path[0]) * 90;
+	car.type = rand() % 3 + 5;
 	car.velocity = 0.002*(rand()%10+5);
 	car.intersect = true;
 }

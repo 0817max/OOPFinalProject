@@ -1,14 +1,16 @@
-enum BuildType { Empty=0, FireSta=1, Logistics=2, PoliceOff=3, Factory=4, Shopping=5, School=6, Hospital=7, House=8 };
-struct Building {
-	BuildType type;
-	int x, y;
-	PosPoint Pos;
-};
 
 void createBuilding(Building **&build, const WindowData& fullViewport, int** road) {
 	int width = fullViewport.w, height = fullViewport.h;
 	int hnum = fullViewport.hnum - 1, wnum = fullViewport.wnum - 1;
 	int i, j;
+
+	//If there are buildings, clear all
+	if (build) {
+		for (i = 0; i < hnum; i++)
+			delete[]build[i];
+		delete[]build;
+		build = NULL;
+	}
 
 	//create all building
 	build = new Building * [hnum];
@@ -36,7 +38,7 @@ void createBuilding(Building **&build, const WindowData& fullViewport, int** roa
 	} while (c < 20);
 }
 
-int addBuild(SDL_Renderer* renderer, const WindowData& fullViewport, const MouseState& mouseState, const int mousex, const int mousey, Building** build, ImageData build_pic[]) {
+int addBuild(SDL_Renderer* renderer, const WindowData& fullViewport, const MouseState& mouseState, const int mousex, const int mousey, Building** build, ImageData build_pic[], CarData car[]) {
 	int width = fullViewport.w, height = fullViewport.h, wnum=fullViewport.wnum, hnum=fullViewport.hnum, xnum, ynum;
 	static int choose = 0;
 	static SDL_TimerID timerID_clock;
@@ -54,6 +56,47 @@ int addBuild(SDL_Renderer* renderer, const WindowData& fullViewport, const Mouse
 				if (build[ynum][xnum].type == Empty) {
 					if (checkRoad(ynum, xnum)) {
 						build[ynum][xnum].type = (BuildType)choose;
+						//adding more special car
+						if (choose == FireSta) {
+							int c = 0, i=0;
+							while (c < 2&&i<CARNUM) {
+								printf("%d %d\n", i, car[i].type);
+								if (car[i].type > 4 || car[i].type == 0) {
+									car[i].velocity = -3;
+									car[i].type = c + 1;
+									car[i].home_xnum = xnum;
+									car[i].home_ynum = ynum;
+									c++;
+								}
+								i++;
+							}
+						}
+						else if (choose == Logistics) {
+							int i = 0;
+							while (car[i].type <= 4 && car[i].type != 0 && i < CARNUM) {
+								printf("%d %d\n", i, car[i].type);
+								i++;
+							}
+							if (i < CARNUM) {
+								car[i].velocity = -3;
+								car[i].type = 3;
+								car[i].home_xnum = xnum;
+								car[i].home_ynum = ynum;
+							}
+						}
+						else if (choose==PoliceOff){
+							int i = 0;
+							while (car[i].type <= 4 && car[i].type != 0 && i < CARNUM) {
+								printf("%d %d\n", i, car[i].type);
+								i++;
+							}
+							if (i < CARNUM) {
+								car[i].velocity = -3;
+								car[i].type = 4;
+								car[i].home_xnum = xnum;
+								car[i].home_ynum = ynum;
+							}
+						}
 					}
 					else 
 						return 1;

@@ -101,7 +101,7 @@ void incident(SDL_Renderer* renderer, const WindowData& fullViewport, bool windo
 		alpha = 255;
 	int width = fullViewport.w, height = fullViewport.h;
 	//Change the words here to choose different incident
-	char incident_name[3][50] = { "There is no road!", "There is a building!", "There is no building!" };
+	char incident_name[4][50] = { "There is no road!", "There is a building!", "There is no building!", "There is no car!"};
 	char inci_pic_path[50] = "../images/incident.png";
 	static ImageData inci_pic = loadImgTexture(renderer, inci_pic_path, 1, 1, 1);
 	static TextData incident_text= loadTextTexture(renderer, incident_name[incident_type - 1], "../fonts/TaipeiSansTCBeta-Regular.ttf", height / 27, 10, 10, 10, BLENDED);

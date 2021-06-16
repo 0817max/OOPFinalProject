@@ -7,9 +7,9 @@
 #include "SDLusage.h"
 #include "Interface.h"
 #include "Map.h"
-#include "House.h"
 #include "randomCar.h"
 #include "Car.h"
+#include "House.h"
 #include "Event.h"
 
 
@@ -66,12 +66,18 @@ int main(int argc, char* args[])
 	for(int i=0; i<10; i++)
 		build_pic[i] = loadImgTexture(renderer, build_pic_path[i], 1, 1, 1);
 	ImageData flag_pic = loadImgTexture(renderer, (char*)"../images/flag.png", 1, 1, 1);
-	char car_pic_path[8][100] = { "../images/car.png","../images/car1.png",  "../images/car2.png", "../images/fire_truck.png",
-	"../images/bubble_truck.png","../images/truck.png", "../images/truck1.png", "../images/police_car.png"};
-	ImageData car_pic[8];
-	for (int i = 0; i < 8; i++)
+	char car_pic_path[7][100] = {"../images/fire_truck.png",
+	"../images/bubble_truck.png", "../images/truck.png", "../images/police_car.png", "../images/car.png","../images/car1.png",  "../images/car2.png"};
+	ImageData car_pic[7];
+	for (int i = 0; i < 7; i++)
 		car_pic[i] = loadImgTexture(renderer, car_pic_path[i], 1, 1, 1);
 	ImageData fire = loadImgTexture(renderer, (char*)"../images/fire.png", 1, 1, 1);
+	ImageData cloud_pic[2];
+	cloud_pic[0] = loadImgTexture(renderer, (char*)"../images/white_cloud.png", 1, 1, 1);
+	cloud_pic[1] = loadImgTexture(renderer, (char*)"../images/dark_cloud.png", 1, 1, 1);
+	//Initialzing Car
+	CarData car[CARNUM];
+
 
 	createRandomMap(fullViewport, road, RoadLength);
 	destroyRoad(road, fullViewport.hnum, fullViewport.wnum);
@@ -79,29 +85,11 @@ int main(int argc, char* args[])
 
 	int next_inci, inci=0, inci_alpha=0, path_length;
 
-	CarData car[RANDCARNUM+4];
-	point *start=new point [RANDCARNUM];
-	bool repeat = false;
-	for (int i = 0; i < RANDCARNUM + 4; i++) {
-		car[i].velocity = -1;
+	while (initCar(&fullViewport, car, build)) {
+		createRandomMap(fullViewport, road, RoadLength);
+		destroyRoad(road, fullViewport.hnum, fullViewport.wnum);
+		createBuilding(build, fullViewport, road);
 	}
-	for (int i = 0; i < RANDCARNUM; i++) {
-		//printf("%d\n", i);
-		do {
-			repeat = false;
-			start[i] = randomstart(fullViewport, road);
-			//printf("%d %d\n", start[i].x, start[i].y);
-			for (int j = 0; j <i; j++)
-				if ((start[j].x == start[i].x)&& (start[j].y == start[i].y)) {
-					repeat = true;
-					break;
-				}
-		} while (repeat);
-	}
-	for (int i = 4; i < RANDCARNUM + 4; i++)
-		createRandomCar(car[i], fullViewport, start[i-4], car_pic[rand() % 3]);
-	delete[]start;
-
 	//EventData event;
 	//event.level = 1, event.season=0;
 	//createEvent(event, fullViewport);
@@ -145,10 +133,12 @@ int main(int argc, char* args[])
 		mapRender(renderer, fullViewport, road_pic, road_pic1); 
 		controlRender(renderer, fullViewport, windowChange, t, population, money, love, control_pic, build_pic, flag_pic);
 		buildRender(renderer, fullViewport, build, build_pic);
-		carRender(renderer, fullViewport, car);
+		carRender(renderer, fullViewport, car, car_pic, cloud_pic);
 		incident(renderer, fullViewport, windowChange, inci, inci_alpha);
+
+		//add things
 		next_inci = addCar(renderer, fullViewport, mouseState, mouseX, mouseY, build, car, car_pic);
-		next_inci += addBuild(renderer, fullViewport, mouseState, mouseX, mouseY, build, build_pic);
+		next_inci += addBuild(renderer, fullViewport, mouseState, mouseX, mouseY, build, build_pic, car);
 		if (next_inci||inci) {
 			if (next_inci) {
 				inci = next_inci;

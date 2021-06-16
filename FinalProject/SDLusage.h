@@ -1,3 +1,4 @@
+
 struct ImageData
 {
 	SDL_Texture* texture;
@@ -42,6 +43,29 @@ enum PosPoint {
 	Left, Middle, Right, 
 	LeftBottom, Bottom, RightBottom
 };
+
+enum BuildType { Empty = 0, FireSta = 1, Logistics = 2, PoliceOff = 3, Factory = 4, Shopping = 5, School = 6, Hospital = 7, House = 8 };
+struct Building {
+	BuildType type;
+	int x, y;
+	PosPoint Pos;
+};
+
+struct CarData
+{
+	double x, y;	//x:0.5~(wnum-0.5), y:0.5~(hnum-0.5)
+	WindowData* window;
+	char* path;  //up: 3, right: 2, down: 1, left: 0
+	unsigned int i : 6;	//start from 0 to length-1
+	unsigned int length : 6;
+	unsigned int angle : 9;
+	unsigned int type : 3; //0:no car, 1:fire truck, 2:bubble truck, 3:truck, 4:police car, 5:car, 6: car1, 7:car2
+	unsigned int home_xnum : 4;
+	unsigned int home_ynum : 4;
+	double velocity;  //-1:no car
+	bool intersect;
+};
+
 
 const int SOLID = 100;
 const int SHADED = 101;

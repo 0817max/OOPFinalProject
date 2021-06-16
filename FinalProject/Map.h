@@ -13,7 +13,10 @@ int** road=NULL;
 
 int randomDirection(WindowData& fullViewport, int x, int y, int pastDirection) {
 	int wnum = fullViewport.wnum, hnum = fullViewport.hnum, direction;
+	//let more possiblility on forward direction
+	//On the left side
 	if (x == 0) {
+		//On the top
 		if (y == 0) {
 			switch (rand() % 3) {
 			case 0:
@@ -25,6 +28,7 @@ int randomDirection(WindowData& fullViewport, int x, int y, int pastDirection) {
 				break;
 			}
 		}
+		//On the bottom
 		else if (y == hnum - 1) {
 			switch (rand() % 3) {
 			case 0:
@@ -52,7 +56,9 @@ int randomDirection(WindowData& fullViewport, int x, int y, int pastDirection) {
 			}
 		}
 	}
+	//On the right side
 	else if (x == wnum - 1) {
+		//On the top
 		if (y == 0) {
 			switch (rand() % 3) {
 			case 0:
@@ -64,6 +70,7 @@ int randomDirection(WindowData& fullViewport, int x, int y, int pastDirection) {
 				break;
 			}
 		}
+		//On the bottom
 		else if (y == hnum - 1) {
 			switch (rand() % 3) {
 			case 0:
@@ -93,6 +100,7 @@ int randomDirection(WindowData& fullViewport, int x, int y, int pastDirection) {
 		}
 	}
 	else {
+		//On the top
 		if (y == 0) {
 			switch (rand() % 5) {
 			case 0:
@@ -108,6 +116,7 @@ int randomDirection(WindowData& fullViewport, int x, int y, int pastDirection) {
 				break;
 			}
 		}
+		//On the bottom
 		else if (y == hnum - 1) {
 			switch (rand() % 5) {
 			case 0:
@@ -148,17 +157,28 @@ int randomDirection(WindowData& fullViewport, int x, int y, int pastDirection) {
 
 void createRandomMap(WindowData& fullViewport, int** &road, int length) {
 	int wnum = fullViewport.wnum, hnum = fullViewport.hnum;
+	//If there is map, clear all
+	if (road) {
+		for (int i = 0; i < hnum; i++)
+			delete[]road[i];
+		delete[]road;
+		road = NULL;
+	}
 	road = new int* [hnum];
 	for (int i = 0; i < hnum; i++) {
 		road[i] = new int[wnum];
 		for (int j = 0; j < wnum; j++)
 			road[i][j] = 0;
 	}
+	//random start point
 	int x = rand() % wnum, y = rand() % hnum, direction, i = 0;
+	//random direction until i=length
 	direction = randomDirection(fullViewport, x, y, rand() % 3);
 	while (i < length) {
+		//if it is new road, add i
 		if (((road[y][x] >> (direction * 4)) % 2) == 0) {
 			i++;
+			//add the start point road
 			road[y][x] += (1 << (direction * 4));
 		}
 		switch (direction) {
@@ -175,6 +195,7 @@ void createRandomMap(WindowData& fullViewport, int** &road, int length) {
 				y--;
 				break;
 		}
+		//add the end point road
 		if (((road[y][x] >> ((direction+2)%4 * 4)) % 2) == 0)
 			road[y][x] += (1 << ((direction+2)%4 * 4));
 		direction = randomDirection(fullViewport, x, y, direction);
