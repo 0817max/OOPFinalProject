@@ -170,6 +170,7 @@ void createRandomMap(WindowData& fullViewport, int** &road, int length) {
 		for (int j = 0; j < wnum; j++)
 			road[i][j] = 0;
 	}
+	
 	//random start point
 	int x = rand() % wnum, y = rand() % hnum, direction, i = 0;
 	//random direction until i=length

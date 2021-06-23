@@ -304,7 +304,6 @@ Uint32 car_move(Uint32 interval, void* param)
 			}
 		}
 	}
-
 	for (int i = 0; i < CARNUM; i++) {
 		//car drives over the region
 		if (t[i].x<0.45 || t[i].x>wnum - 0.45 || t[i].y<0.45 || t[i].y>hnum - 0.45) {
@@ -357,69 +356,56 @@ Uint32 car_move(Uint32 interval, void* param)
 		
 		//stop when there is a car in front of mycar(by direction) 
 		bool stop = false;
-		for (int k = 0; k < CARNUM; k++) {
-			t[i].angle %= 360;
-			if (i == k || t[k].velocity < 0)
-				continue;
-			int length;
-			if (k == 2||i==2) //truck
-				length = 3;
-			else
-				length = 2;
-			if (t[i].angle == t[k].angle&&(t[i].angle%90==0)) {
-				if (t[i].x == t[k].x && t[i].y == t[k].y)
-					if (i < k)
-						stop = false;
-					else
-						stop = true;
-				if (((width - height / 12) / wnum / 10.) < (height * 11 / 12 / hnum / 6.)) {
-					double xlength=1 / 12.5 * ((width - height / 12) / wnum) / (height * 11 / 12 / hnum);
+		if(t[i].angle % 90 == 0)
+			for (int k = 0; k < CARNUM; k++) {
+				t[i].angle %= 360;
+				if (i == k || t[k].velocity < 0)
+					continue;
+				int length;
+				if (k == 2 || i == 2) //truck
+					length = 3;
+				else
+					length = 2;
+				if (t[i].angle == t[k].angle) {
+					if (t[i].x == t[k].x && t[i].y == t[k].y)
+						if (i > k)
+							stop = true;
+						else
+							stop = false;
 					switch (t[i].angle) {
 						case 0:
-							if (t[k].x == t[i].x && (t[i].y - t[k].y) > 0 && (t[i].y - t[k].y) < length / 6.)
+							if (t[k].x == t[i].x && (t[i].y - t[k].y) > 0 && (t[i].y - t[k].y) < length / 4.5) {
 								stop = true;
+	//							printf("%d ", k);
+							}
 							break;
 						case 90:
-							if (t[k].y == t[i].y &&(t[k].x - t[i].x) > 0 && (t[k].x - t[i].x) < length*xlength)
+							if (t[k].y == t[i].y && (t[k].x - t[i].x) > 0 && (t[k].x - t[i].x) < length / 9.) {
 								stop = true;
+	//							printf("%d ", k);
+							}
 							break;
 						case 180:
-							if (t[k].x == t[i].x && (t[k].y - t[i].y )> 0 &&( t[k].y - t[i].y) < length / 6.)
+							if (t[k].x == t[i].x && (t[k].y - t[i].y) > 0 && (t[k].y - t[i].y) < length / 4.5) {
 								stop = true;
+	//							printf("%d ", k);
+							}
 							break;
 						case 270:
-							if (t[k].y == t[k].y && (t[i].x - t[k].x) > 0 && (t[i].x - t[k].x) < length*xlength)
+							if (t[k].y == t[i].y && (t[i].x - t[k].x) > 0 && (t[i].x - t[k].x) < length / 9.) {
 								stop = true;
-							break;
-
-					}
-				}
-				else {
-					double ylength = 1 / 6. / ((width - height / 12) / wnum) * (height * 11 / 12 / hnum);
-					switch (t[i].angle) {
-						case 0:
-							if (t[k].x == t[i].x && (t[i].y - t[k].y) > 0 && (t[i].y - t[k].y) < length*ylength)
-								stop = true;
-							break;
-						case 90:
-							if (t[k].y == t[i].y && (t[k].x - t[i].x) > 0 && (t[k].x - t[i].x) < length/10.)
-								stop = true;
-							break;
-						case 180:
-							if (t[k].x == t[i].x && (t[k].y - t[i].y) > 0 && (t[k].y - t[i].y) < length / 6.)
-								stop = true;
-							break;
-						case 270:
-							if (t[k].y == t[k].y && (t[i].x - t[k].x) > 0 && (t[i].x - t[k].x) < length*ylength)
-								stop = true;
+	//							printf("%d ", k);
+							}
 							break;
 					}
 				}
 			}
-		}
-
-		if (stop)
+			
+		//can't stop in intersection
+		if (stop) {
+	//		printf("%d %lf %lf %d --\n", i, t[i].x, t[i].y, t[i].angle);
 			continue;
+		}
 
 		if (!t[i].path)
 			continue;
@@ -429,31 +415,34 @@ Uint32 car_move(Uint32 interval, void* param)
 		//If not into the intersect or the angle has meet the next direction(If not go straight)
 		if (!checkIntersect(*(t[i].window), road, t[i].y, t[i].x)||((t[i].i < t[i].length) && ((t[i].path[t[i].i] != t[i].path[t[i].i + 1] && (t[i].angle == (3 - t[i].path[t[i].i + 1]) * 90))))) {
 			if (t[i].intersect) {
+				fillIntersect(CarIntersect[(int)t[i].y][(int)t[i].x], t[i].path[t[i].i], t[i].path[t[i].i + 1], 0);
 				(t[i].i)++;
+				CarIntersect[(int)t[i].y][(int)t[i].x][(t[i].path[t[i].i] + 3) % 4] = i + 1;
 			}
 			t[i].intersect = false;
 	//		printf("1");
 			//Leave the interscetion, free the intersection
-			if (i == 2&& (fabs(t[i].x - (int)t[i].x - 0.5) > 2 / 8. || fabs(t[i].y - (int)t[i].y - 0.5) >= 1 / 2.2)) {	//for truck
-				for (int j = 0; j < hnum; j++)
-					for (int k = 0; k < wnum; k++)
+			if (i == 2&& (fabs(t[i].x - (int)t[i].x - 0.5) > 1 / 3 || fabs(t[i].y - (int)t[i].y - 0.5) >= 1 / 2.01)) {	//for truck
+				for (int j = 0; j < 2; j++)
+					for (int k = 0; k < 2; k++)
 						for (int l = 0; l < 4; l++)
-							if (CarIntersect[j][k][l] == i + 1)
-								CarIntersect[j][k][l] = 0;
+							if (CarIntersect[(int)(t[i].y - 1 + j)][(int)(t[i].x-1+k)][l] == i + 1)
+								CarIntersect[(int)(t[i].y - 1 + j)][(int)(t[i].x - 1 + k)][l] = 0;
 			}
 			else{
-				if((fabs(t[i].x - (int)t[i].x - 0.5) > 1 / 8. || fabs(t[i].y - (int)t[i].y - 0.5) > 1 / 3.))
-					for (int j = 0; j < hnum; j++)
-						for (int k = 0; k < wnum; k++)
+				if((fabs(t[i].x - (int)t[i].x - 0.5) > 1 / 4.2 || fabs(t[i].y - (int)t[i].y - 0.5) > 1 / 2.24))
+					for (int j = 0; j < 2; j++)
+						for (int k = 0; k < 2; k++)
 							for (int l = 0; l < 4; l++)
-								if (CarIntersect[j][k][l] == i + 1)
-									CarIntersect[j][k][l] = 0;
+								if (CarIntersect[(int)(t[i].y - 1 + j)][(int)(t[i].x - 1 + k)][l] == i + 1)
+									CarIntersect[(int)(t[i].y - 1 + j)][(int)(t[i].x - 1 + k)][l] = 0;
 			}
 
 			//close to intersection, stop to check if there is a car
 			switch (t[i].angle % 360) {
 				case 0:
-					if (t[i].i != t[i].length&&!equalIntersect(CarIntersect[(int)(t[i].y - 0.5)][(int)t[i].x], t[i].path[t[i].i], t[i].path[t[i].i+1], 0) && (t[i].y + 0.5-(int)(t[i].y + 0.5)) < 1 / 4.) {
+					if (t[i].i != t[i].length&&!equalIntersect(CarIntersect[(int)(t[i].y)][(int)t[i].x], t[i].path[t[i].i], t[i].path[t[i].i+1], 0) && (t[i].y + 0.5-(int)(t[i].y + 0.5)) < 1 / 3.) {
+	//					printf("%d %d %lf %lf %d 01\n", CarIntersect[(int)(t[i].y)][(int)t[i].x][(t[i].path[t[i].i] + 2) % 4]-1, i, t[i].x, t[i].y, t[i].angle);
 						continue;
 					}
 					else {
@@ -462,7 +451,8 @@ Uint32 car_move(Uint32 interval, void* param)
 					}
 					break;
 				case 90:
-					if (t[i].i != t[i].length&&!equalIntersect(CarIntersect[(int)(t[i].y)][(int)(t[i].x+0.5)], t[i].path[t[i].i], t[i].path[t[i].i + 1], 0)&& (t[i].x + 0.5 - (int)(t[i].x + 0.5) )>  8/ 9.) {
+					if (t[i].i != t[i].length&&!equalIntersect(CarIntersect[(int)(t[i].y)][(int)(t[i].x)], t[i].path[t[i].i], t[i].path[t[i].i + 1], 0)&& (t[i].x + 0.5 - (int)(t[i].x + 0.5) )>  7/ 9.) {
+	//					printf("%d %d %lf %lf %d 02\n", CarIntersect[(int)(t[i].y)][(int)t[i].x][(t[i].path[t[i].i] + 2) % 4]-1, i, t[i].x, t[i].y, t[i].angle);
 						continue;
 					}
 					else {
@@ -471,7 +461,8 @@ Uint32 car_move(Uint32 interval, void* param)
 					}
 					break;
 				case 180:
-					if (t[i].i != t[i].length&&!equalIntersect(CarIntersect[(int)(t[i].y + 0.5)][(int)t[i].x], t[i].path[t[i].i], t[i].path[t[i].i + 1], 0) && (t[i].y + 0.5 - (int)(t[i].y + 0.5)) > 3 / 4.) {
+					if (t[i].i != t[i].length&&!equalIntersect(CarIntersect[(int)(t[i].y)][(int)t[i].x], t[i].path[t[i].i], t[i].path[t[i].i + 1], 0) && (t[i].y + 0.5 - (int)(t[i].y + 0.5)) > 2 / 3.) {
+	//					printf("%d %d %lf %lf %d 03\n", CarIntersect[(int)(t[i].y)][(int)t[i].x][(t[i].path[t[i].i]+2) % 4]-1, i, t[i].x, t[i].y, t[i].angle);
 						continue;
 					}
 					else {
@@ -480,7 +471,8 @@ Uint32 car_move(Uint32 interval, void* param)
 					}
 					break;
 				case 270:
-					if (t[i].i != t[i].length&&!equalIntersect(CarIntersect[(int)(t[i].y)][(int)(t[i].x-0.5)], t[i].path[t[i].i], t[i].path[t[i].i + 1], 0) && (t[i].x + 0.5 - (int)(t[i].x + 0.5)) < 1 / 9.) {
+					if (t[i].i != t[i].length&&!equalIntersect(CarIntersect[(int)(t[i].y)][(int)(t[i].x)], t[i].path[t[i].i], t[i].path[t[i].i + 1], 0) && (t[i].x + 0.5 - (int)(t[i].x + 0.5)) < 2 / 9.) {
+	//					printf("%d %d %lf %lf %d 04\n", CarIntersect[(int)(t[i].y)][(int)t[i].x][(t[i].path[t[i].i] + 2) % 4]-1, i, t[i].x, t[i].y, t[i].angle);
 						continue;
 					}
 					else {
@@ -494,9 +486,9 @@ Uint32 car_move(Uint32 interval, void* param)
 			if (t[i].i == t[i].length) {
 				if (t[i].angle == 90 || t[i].angle == 270) {
 					if (fabs(t[i].x - (int)t[i].x) < 2 * t[i].velocity)
-						if (t[i].type<5)
+						if (t[i].type < 5)
 							t[i].velocity = -2;
-						else
+						else 
 							t[i].velocity = -1;
 				}
 				else if (t[i].angle == 0 || t[i].angle == 180) {
@@ -506,11 +498,17 @@ Uint32 car_move(Uint32 interval, void* param)
 						else
 							t[i].velocity = -1;
 				}
+				for (int j = 0; j < hnum; j++)
+					for (int k = 0; k < wnum; k++)
+						for (int l = 0; l < 4; l++)
+							if (CarIntersect[j][k][l] == i + 1)
+								CarIntersect[j][k][l] = 0;
+
 			}
+	//		printf("%d %lf %lf %d 05\n", i, t[i].x, t[i].y, t[i].angle);
 			continue;
 		}
 		else if (t[i].path[t[i].i] == t[i].path[t[i].i + 1]) {		//go straight
-	//		printf("3");
 			if (t[i].path[t[i].i + 1] < 0) {		//special stop
 				t[i].velocity = -1;
 				for (int j = 0; j < hnum; j++)
@@ -526,10 +524,12 @@ Uint32 car_move(Uint32 interval, void* param)
 			if (!equalIntersect(CarIntersect[(int)t[i].y][(int)t[i].x], t[i].path[t[i].i], t[i].path[t[i].i + 1], (i + 1))) {
 				if (equalIntersect(CarIntersect[(int)t[i].y][(int)t[i].x], t[i].path[t[i].i], t[i].path[t[i].i + 1], 0))
 					fillIntersect(CarIntersect[(int)t[i].y][(int)t[i].x], t[i].path[t[i].i], t[i].path[t[i].i + 1], (i + 1));
-				else
+				else {
+	//				printf("%d %d %lf %lf %d 11\n", CarIntersect[(int)(t[i].y)][(int)t[i].x][(t[i].path[t[i].i] + 2) % 4] - 1, i, t[i].x, t[i].y, t[i].angle);
 					continue;
+				}
 			}
-
+			
 			switch (t[i].angle % 360) {
 				case 0:
 					t[i].y -= (t[i].velocity);
@@ -544,11 +544,11 @@ Uint32 car_move(Uint32 interval, void* param)
 					t[i].x -= (t[i].velocity);
 					break;
 			}
+	//		printf("%d %lf %lf %d 12\n", i, t[i].x, t[i].y, t[i].angle);
 			continue;
 		}
 		else
 		{
-	//		printf("4");
 			if (t[i].path[t[i].i + 1] < 0) {		//special stop
 				t[i].velocity = -1;
 				for (int j = 0; j < hnum; j++)
@@ -564,8 +564,10 @@ Uint32 car_move(Uint32 interval, void* param)
 			if (!equalIntersect(CarIntersect[(int)t[i].y][(int)t[i].x], t[i].path[t[i].i], t[i].path[t[i].i + 1], (i + 1))) {
 				if (equalIntersect(CarIntersect[(int)t[i].y][(int)t[i].x], t[i].path[t[i].i], t[i].path[t[i].i + 1], 0))
 					fillIntersect(CarIntersect[(int)t[i].y][(int)t[i].x], t[i].path[t[i].i], t[i].path[t[i].i + 1], (i + 1));
-				else
+				else {
+	//				printf("%d %d %lf %lf %d 21\n", CarIntersect[(int)(t[i].y)][(int)t[i].x][(t[i].path[t[i].i] + 2) % 4] - 1, i, t[i].x, t[i].y, t[i].angle);
 					continue;
+				}
 			}
 
 			t[i].x = (int)t[i].x + 0.5;
@@ -613,11 +615,11 @@ Uint32 car_move(Uint32 interval, void* param)
 						break;
 				}
 			}
-			//		printf("%d ", t[i].angle);
-			//		printf("%lf %lf\n", t[i].x, t[i].y);
+	//		printf("%d %lf %lf %d 22\n", i, t[i].x, t[i].y, t[i].angle);
 			continue;
 		}
 	}
+	//printf("==========\n\n");
 	/*
 	for (int j = 0; j < hnum; j++) {
 		for (int k = 0; k < wnum; k++) {
@@ -720,7 +722,6 @@ char* createPath(const WindowData& fullViewport, double start_y, double start_x,
 	length = (int)(min_dis+1);
 	char* path=new char [length+1];
 	int y, x;
-	printf("%lf %d", min_dis, min_disp);
 	//find the direction from destination point to house and initialize the starting point of retracing
 	switch (min_disp) {
 		case 3:
@@ -814,12 +815,12 @@ char* createPath(const WindowData& fullViewport, double start_y, double start_x,
 		else
 			path[0] = 2;
 	}
-	for (int i = 0; i < hnum; i++) {
+	/*for (int i = 0; i < hnum; i++) {
 		for (int j = 0; j < wnum; j++)
 			printf("%lg ", distance[i][j]);
 		printf("\n");
 	}
-	printf("\n");
+	printf("\n");*/
 	for (int i = 0; i < hnum; i++)
 		delete[]distance[i];
 	delete[]distance;

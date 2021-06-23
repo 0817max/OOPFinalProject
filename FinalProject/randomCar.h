@@ -1,5 +1,5 @@
-#define CARNUM 36
-#define INITAILlRANDOMCARNUM 32
+#define CARNUM 32
+#define INITAILlRANDOMCARNUM 28
 struct point {
 	int x, y;
 	bool exist;
@@ -374,6 +374,9 @@ char* randpath(const WindowData& fullViewport, const point& startp, int& n) {
 		delete rv[i];
 	delete[]rh;
 	delete[]rv;
+	while (path == NULL) {
+		path=randpath(fullViewport, startp, n);
+	}
 	return path;
 }
 
@@ -385,7 +388,7 @@ void createRandomCar(CarData& car, WindowData& fullViewport, const point& start)
 	car.path = NULL;
 	do {
 		car.path = randpath(fullViewport, start, length);
-	} while ((car.path == NULL) || (length < 2) || (car.path[0] == -1));
+		} while ((car.path == NULL) || (length < 2) || (car.path[0] == -1));
 	//for (int i = 0; i <= length; i++)
 	//	printf("path[%d]=%d\n", i, car.path[i]);
 	car.length = length;

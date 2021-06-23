@@ -95,7 +95,7 @@ int main(int argc, char* args[])
 	//createEvent(event, fullViewport);
 
 
-	timerID_car = SDL_AddTimer(15, car_move, car);
+	timerID_car = SDL_AddTimer(12, car_move, car);
 	//timerID_event = SDL_AddTimer(100, event_change, &event);
 
 	
