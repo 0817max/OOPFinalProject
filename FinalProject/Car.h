@@ -194,7 +194,7 @@ int addCar(SDL_Renderer* renderer, WindowData& fullViewport, MouseState mouseSta
 		}
 		
 		//If not choose, left click to enter select menu
-		else if (mousex >= (width - height / 12) && mousey >= (height * 9 / 12) && mousey <= (height * 11 / 12)) {
+		else if (mousex >= (width - height / 12) && mousey >= (height * 10 / 12) && mousey <= (height * 12 / 12)) {
 			select = 1;
 		}
 	}
@@ -268,11 +268,7 @@ void carRender(SDL_Renderer* renderer, const WindowData& fullViewport, CarData c
 
 		//cloud for car
 		if (car[i].velocity < -1) {
-			//verticle
-			if(car[i].angle%180)
-				imgRender(renderer, cloud_pic[0], Middle, car[i].x * (width - height / 12) / wnum, car[i].y * (height * 11 / 12) / hnum + (height / 12),NULL, (height - height / 12) / hnum / 3., 1, NULL, NULL, 0, no, (int)(255 * (-1 - car[i].velocity)) % 255);
-			else
-				imgRender(renderer, cloud_pic[0], Middle, car[i].x * (width - height / 12) / wnum, car[i].y * (height * 11 / 12) / hnum + (height / 12), (width - height / 12) / wnum / 4., NULL, 1, NULL, NULL, 0, no, (int)(255*(-1-car[i].velocity))%255);
+			imgRender(renderer, cloud_pic[0], Middle, (car[i].home_xnum+1) * (width - height / 12) / wnum, (car[i].home_ynum+1) * (height * 11 / 12) / hnum + (height / 12), (width - height / 12) / wnum*0.9, NULL, 1, NULL, NULL, 0, no, (int)(255*(-1-car[i].velocity))%255);
 		}
 		if (car[i].velocity < 0) {
 			if (!car[i].path) {
@@ -420,22 +416,33 @@ Uint32 car_move(Uint32 interval, void* param)
 				CarIntersect[(int)t[i].y][(int)t[i].x][(t[i].path[t[i].i] + 3) % 4] = i + 1;
 			}
 			t[i].intersect = false;
-	//		printf("1");
 			//Leave the interscetion, free the intersection
 			if (i == 2&& (fabs(t[i].x - (int)t[i].x - 0.5) > 1 / 3 || fabs(t[i].y - (int)t[i].y - 0.5) >= 1 / 2.01)) {	//for truck
-				for (int j = 0; j < 2; j++)
-					for (int k = 0; k < 2; k++)
+				for (int j = 0; j < 2; j++) {
+					if ((int)(t[i].y - 1 + j) < 0 || (int)(t[i].y - 1 + j) >= hnum)
+						continue;
+					for (int k = 0; k < 2; k++) {
+						if ((int)(t[i].x - 1 + k) < 0 || (int)(t[i].x - 1 + k) >= wnum)
+							continue;
 						for (int l = 0; l < 4; l++)
-							if (CarIntersect[(int)(t[i].y - 1 + j)][(int)(t[i].x-1+k)][l] == i + 1)
+							if (CarIntersect[(int)(t[i].y - 1 + j)][(int)(t[i].x - 1 + k)][l] == i + 1)
 								CarIntersect[(int)(t[i].y - 1 + j)][(int)(t[i].x - 1 + k)][l] = 0;
+					}
+				}
 			}
 			else{
 				if((fabs(t[i].x - (int)t[i].x - 0.5) > 1 / 4.2 || fabs(t[i].y - (int)t[i].y - 0.5) > 1 / 2.24))
-					for (int j = 0; j < 2; j++)
-						for (int k = 0; k < 2; k++)
+					for (int j = 0; j < 2; j++) {
+						if ((int)(t[i].y - 1 + j) < 0 || (int)(t[i].y - 1 + j) >= hnum)
+							continue;
+						for (int k = 0; k < 2; k++) {
+							if ((int)(t[i].x - 1 + k) < 0 || (int)(t[i].x - 1 + k) >= wnum)
+								continue;
 							for (int l = 0; l < 4; l++)
 								if (CarIntersect[(int)(t[i].y - 1 + j)][(int)(t[i].x - 1 + k)][l] == i + 1)
 									CarIntersect[(int)(t[i].y - 1 + j)][(int)(t[i].x - 1 + k)][l] = 0;
+						}
+					}
 			}
 
 			//close to intersection, stop to check if there is a car

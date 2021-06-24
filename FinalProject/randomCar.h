@@ -87,26 +87,6 @@ char* randpath(const WindowData& fullViewport, const point& startp, int& n) {
 	int stop = 0;
 	char* path = new char[n + 1];
 	int wnum = fullViewport.wnum, hnum = fullViewport.hnum;
-	int** rh = new int* [hnum];
-	for (int i = 0; i < hnum; i++)
-		rh[i] = new int[wnum - 1];
-	int** rv = new int* [hnum - 1];
-	for (int i = 0; i < hnum - 1; i++)
-		rv[i] = new int[wnum];
-	for (int i = 0; i < hnum; i++) //horizontal road
-		for (int j = 0; j < wnum - 1; j++) {
-			if (((road[i][j] >> 8) % 2) * (road[i][j + 1] % 2))
-				rh[i][j] = 1;
-			else
-				rh[i][j] = 0;
-		}
-	for (int i = 0; i < hnum - 1; i++)//vertical road
-		for (int j = 0; j < wnum; j++) {
-			if (((road[i][j] >> 4) % 2) * ((road[i + 1][j] >> 12) % 2))
-				rv[i][j] = 1;
-			else
-				rv[i][j] = 0;
-		}
 	point p;
 	p.x = startp.x;
 	p.y = startp.y;
@@ -118,11 +98,11 @@ char* randpath(const WindowData& fullViewport, const point& startp, int& n) {
 			break;
 		}
 		if (p.x >= 1 && p.x < wnum - 1) {
-			if (rh[p.y][p.x - 1] == 1)
+			if (road[p.y][p.x]%2)
 				p.l = 1;
 			else
 				p.l = 0;
-			if (rh[p.y][p.x] == 1)
+			if ((road[p.y][p.x]>>8) % 2)
 				p.r = 1;
 			else
 				p.r = 0;
@@ -130,25 +110,25 @@ char* randpath(const WindowData& fullViewport, const point& startp, int& n) {
 		else if (p.x == 0 || p.x == wnum - 1) {
 			if (p.x == 0) {
 				p.l == 0;
-				if (rh[p.y][p.x] == 1)
+				if ((road[p.y][p.x] >> 8) % 2)
 					p.r = 1;
 				else
 					p.r = 0;
 			}
 			else {
 				p.r = 0;
-				if (rh[p.y][p.x - 1] == 1)
+				if (road[p.y][p.x]% 2)
 					p.l = 1;
 				else
 					p.l = 0;
 			}
 		}
 		if (p.y >= 1 && p.y < hnum - 1) {
-			if (rv[p.y - 1][p.x] == 1)
+			if ((road[p.y][p.x] >> 12) % 2)
 				p.u = 1;
 			else
 				p.u = 0;
-			if (rv[p.y][p.x] == 1)
+			if ((road[p.y][p.x] >> 4) % 2)
 				p.d = 1;
 			else
 				p.d = 0;
@@ -156,14 +136,14 @@ char* randpath(const WindowData& fullViewport, const point& startp, int& n) {
 		else if (p.y == 0 || p.y == hnum - 1) {
 			if (p.y == 0) {
 				p.u = 0;
-				if (rv[p.y][p.x] == 1)
+				if ((road[p.y][p.x] >> 4) % 2)
 					p.d = 1;
 				else
 					p.d = 0;
 			}
 			else {
 				p.d = 0;
-				if (rv[p.y - 1][p.x] == 1)
+				if ((road[p.y][p.x] >> 12) % 2)
 					p.u = 1;
 				else
 					p.u = 0;
@@ -368,12 +348,6 @@ char* randpath(const WindowData& fullViewport, const point& startp, int& n) {
 			}
 	}
 	path[0] = path[1];
-	for (int i = 0; i < hnum; i++)
-		delete rh[i];
-	for (int i = 0; i < hnum - 1; i++)
-		delete rv[i];
-	delete[]rh;
-	delete[]rv;
 	while (path == NULL) {
 		path=randpath(fullViewport, startp, n);
 	}
@@ -388,12 +362,12 @@ void createRandomCar(CarData& car, WindowData& fullViewport, const point& start)
 	car.path = NULL;
 	do {
 		car.path = randpath(fullViewport, start, length);
-		} while ((car.path == NULL) || (length < 2) || (car.path[0] == -1));
 	//for (int i = 0; i <= length; i++)
 	//	printf("path[%d]=%d\n", i, car.path[i]);
-	car.length = length;
-	car.window = &fullViewport;
-	car.i = 0;
+		car.length = length;
+		car.window = &fullViewport;
+		car.i = 0;
+	} while ((car.path == NULL) || (length < 2) || (car.path[0] == -1));
 	car.angle = (3 - car.path[0]) * 90;
 	car.type = rand() % 3 + 5;
 	car.velocity = 0.002*(rand()%10+5);

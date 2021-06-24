@@ -44,7 +44,7 @@ enum PosPoint {
 	LeftBottom, Bottom, RightBottom
 };
 
-enum BuildType { Empty = 0, FireSta = 1, Logistics = 2, PoliceOff = 3, Factory = 4, Shopping = 5, School = 6, Hospital = 7, House = 8 };
+enum BuildType { Empty = 0, FireSta = 1, Logistics = 2, PoliceOff = 3, Factory = 4, Shopping = 5, School = 6, Hospital = 7, House1 = 8, House2=9 };
 struct Building {
 	BuildType type;
 	int x, y;
@@ -66,6 +66,15 @@ struct CarData
 	bool intersect;
 };
 
+struct ValueData
+{
+	int time;
+	unsigned int level:3;
+	unsigned int season:2;
+	int population;
+	int love;
+	int money;
+};
 
 const int SOLID = 100;
 const int SHADED = 101;

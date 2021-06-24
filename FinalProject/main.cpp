@@ -16,12 +16,12 @@
 SDL_Window* window = NULL; // The window we'll be rendering to
 SDL_Renderer* renderer = NULL; // The window rendererint initSDL()   int w:1;
 
-int population, love, money;
-int t = 0;
 bool windowChange = false;
 
 
 WindowData fullViewport = { 0, 0, 8, 6, 1, 1};
+
+ValueData value = {0, 1, 0, 35, 0, 0};
 
 Building** build=NULL;
 
@@ -48,11 +48,6 @@ int main(int argc, char* args[])
 
 	srand(time(NULL));
 
-	SDL_TimerID timerID_clock = SDL_AddTimer(10, clock_add, &t);
-	SDL_TimerID timerID_incident;
-	SDL_TimerID timerID_car;
-	SDL_TimerID timerID_event;
-
 	//load images
 	char control_pic_path[3][100] = { "../images/pop_value.png", "../images/money_value.png","../images/love_value.png" };
 	ImageData control_pic[3];
@@ -75,6 +70,10 @@ int main(int argc, char* args[])
 	ImageData cloud_pic[2];
 	cloud_pic[0] = loadImgTexture(renderer, (char*)"../images/white_cloud.png", 1, 1, 1);
 	cloud_pic[1] = loadImgTexture(renderer, (char*)"../images/dark_cloud.png", 1, 1, 1);
+	char event_pic_path[6][100] = { "../images/fire.png", "../images/accident.png","../images/closed_road.png" ,"../images/delivery.png" ,"../images/stolen.png", "../images/flash.png" };
+	ImageData event_pic[6];
+	for (int i = 0; i < 6; i++)
+		event_pic[i] = loadImgTexture(renderer, event_pic_path[i], 1, 1, 1);
 	//Initialzing Car
 	CarData car[CARNUM];
 
@@ -90,14 +89,14 @@ int main(int argc, char* args[])
 		destroyRoad(road, fullViewport.hnum, fullViewport.wnum);
 		createBuilding(build, fullViewport, road);
 	}
-	//EventData event;
-	//event.level = 1, event.season=0;
-	//createEvent(event, fullViewport);
 
+	EventData event;
+	createEvent(event, fullViewport, event_pic, build, &value);
 
-	timerID_car = SDL_AddTimer(12, car_move, car);
-	//timerID_event = SDL_AddTimer(100, event_change, &event);
-
+	SDL_TimerID timerID_clock = SDL_AddTimer(10, clock_add, &(value.time));
+	SDL_TimerID timerID_incident;
+	SDL_TimerID timerID_car = SDL_AddTimer(10, car_move, car);
+	SDL_TimerID timerID_event = SDL_AddTimer(1000, event_change, &event);
 	
 	//While application is running
 	while (!quit)
@@ -112,6 +111,8 @@ int main(int argc, char* args[])
 			windowChange = false;
 		}
 		
+		value_change(value);
+
 		mouseState = NONE; //Handle events on queue
 		while (SDL_PollEvent(&e) != 0)
 		{
@@ -131,11 +132,12 @@ int main(int argc, char* args[])
 
 		//draw screen
 		mapRender(renderer, fullViewport, road_pic, road_pic1); 
-		controlRender(renderer, fullViewport, windowChange, t, population, money, love, control_pic, build_pic, flag_pic);
+		controlRender(renderer, fullViewport, windowChange, value, control_pic, build_pic, flag_pic);
 		buildRender(renderer, fullViewport, build, build_pic);
+		eventRender(renderer, fullViewport, event);
 		carRender(renderer, fullViewport, car, car_pic, cloud_pic);
 		incident(renderer, fullViewport, windowChange, inci, inci_alpha);
-
+		
 		//add things
 		next_inci = addCar(renderer, fullViewport, mouseState, mouseX, mouseY, build, car, car_pic);
 		next_inci += addBuild(renderer, fullViewport, mouseState, mouseX, mouseY, build, build_pic, car);
@@ -148,7 +150,6 @@ int main(int argc, char* args[])
 			else if (inci&&(!inci_alpha))
 				inci = 0;
 		}
-		//eventRender(renderer, fullViewport, event);
 		
 		// Update screen
 		SDL_RenderPresent(renderer);
@@ -160,7 +161,7 @@ int main(int argc, char* args[])
 	//SDL_RemoveTimer(timerID_event);
 	incident(NULL, fullViewport, windowChange, inci, inci_alpha);
 	mapRender(NULL, fullViewport, road_pic, road_pic1);
-	controlRender(NULL, fullViewport, windowChange, t, population, money, love, control_pic, build_pic, flag_pic);
+	controlRender(NULL, fullViewport, windowChange, value, control_pic, build_pic, flag_pic);
 	buildRender(NULL, fullViewport, build, build_pic);
 	closeSDL(window,renderer);
 

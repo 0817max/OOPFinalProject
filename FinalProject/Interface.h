@@ -6,7 +6,7 @@ Uint32 clock_add(Uint32 interval, void* param)
 	return interval;
 }
 
-void controlRender(SDL_Renderer* renderer, const WindowData& fullViewport, bool windowChange,int t,int population, int money, int love, ImageData control_pic[], ImageData build_pic[], ImageData flag_pic) {
+void controlRender(SDL_Renderer* renderer, const WindowData& fullViewport, bool windowChange,const ValueData &value, ImageData control_pic[], ImageData build_pic[], ImageData flag_pic) {
 	int width = fullViewport.w, height=fullViewport.h;
 
 	//top
@@ -14,14 +14,14 @@ void controlRender(SDL_Renderer* renderer, const WindowData& fullViewport, bool 
 	
 	//clock
 	filledCircleColor(renderer, height / 15, height / 24, height / 30, 0xFFFFFFFF);
-	thickLineColor(renderer, height / 15, height / 24, height / 15 + height / 45 * sin(t / 60. / 60 / 12 * 2 * M_PI), height / 24 - height / 45 * cos(t / 60. / 60 / 12. * 2 * M_PI), height / 300 + 1, 0xFF008888);
-	thickLineColor(renderer, height / 15, height / 24, height / 15 + height / 36 * sin(t / 60. / 60 * 2 * M_PI), height / 24 - height / 36 * cos(t / 60. / 60 * 2 * M_PI), height / 600 + 1, 0xFF008888);
+	thickLineColor(renderer, height / 15, height / 24, height / 15 + height / 45 * sin(value.time / 60. / 60 / 12 * 2 * M_PI), height / 24 - height / 45 * cos(value.time / 60. / 60 / 12. * 2 * M_PI), height / 300 + 1, 0xFF008888);
+	thickLineColor(renderer, height / 15, height / 24, height / 15 + height / 36 * sin(value.time/ 60. / 60 * 2 * M_PI), height / 24 - height / 36 * cos(value.time / 60. / 60 * 2 * M_PI), height / 600 + 1, 0xFF008888);
 
 	//value
 	char p[10], m[10], l[10];
-	sprintf_s(p, 10, "%d", population);
-	sprintf_s(m, 10, "%d", money);
-	sprintf_s(l, 10, "%d", love);
+	sprintf_s(p, 10, "%d", value.population);
+	sprintf_s(m, 10, "%d", value.money);
+	sprintf_s(l, 10, "%d", value.love);
 
 	static TextData textp = loadTextTexture(renderer, p, "../fonts/TaipeiSansTCBeta-Regular.ttf", height / 2.25 / 12, 255, 255, 255, BLENDED);
 	static TextData textm = loadTextTexture(renderer, m, "../fonts/TaipeiSansTCBeta-Regular.ttf", height / 2.25 / 12, 255, 255, 255, BLENDED);
@@ -70,7 +70,7 @@ void controlRender(SDL_Renderer* renderer, const WindowData& fullViewport, bool 
 	//Right
 	//Background
 	boxColor(renderer, width-height/12, height/12, width, height, 0xFF073480);
-	boxColor(renderer, width - height / 12, height  *8/12 , width, height, 0xFF022D72);
+	boxColor(renderer, width - height / 12, height  *10/12 , width, height, 0xFF022D72);
 	
 	//House Picture
 	imgRender(renderer, build_pic[4], Middle, width-height/24,	height *1.5/12, NULL, height/14,1, NULL, NULL, 0, no, 255);
@@ -80,12 +80,15 @@ void controlRender(SDL_Renderer* renderer, const WindowData& fullViewport, bool 
 	imgRender(renderer, build_pic[7], Middle, width-height/24,	height *5.5/12, NULL, height/14, 1, NULL, NULL, 0, no, 255);
 	imgRender(renderer, build_pic[8], Middle, width-height/24,	height *6.5/12, NULL, height/14, 1, NULL, NULL, 0, no, 255);
 	imgRender(renderer, build_pic[9], Middle, width-height/24,	height *7.5/12, NULL, height/14, 1, NULL, NULL, 0, no, 255);
+	imgRender(renderer, build_pic[0], Middle, width - height / 24, height * 8.5 / 12, height / 14, NULL, 1, NULL, NULL, 0, no, 255);
+	imgRender(renderer, build_pic[1], Middle, width - height / 24, height * 9.5 / 12, height / 14, NULL, 1, NULL, NULL, 0, no, 255);
+
 
 	//Flag Picture
-	imgRender(renderer, flag_pic, Right, width, height*10/12, NULL, height/12, 1, NULL, NULL, 0, no, 255);
+	imgRender(renderer, flag_pic, Right, width, height*11/12, NULL, height/12, 1, NULL, NULL, 0, no, 255);
 
 	//divide line
-	thickLineColor(renderer, width - height / 12, height * 8 / 12, width, height * 8 / 12, height / 1000 + 1, 0x88FFFFFF);
+	thickLineColor(renderer, width - height / 12, height * 10 / 12, width, height * 10 / 12, height / 1000 + 1, 0x88FFFFFF);
 	thickLineColor(renderer, width - height / 12, height / 12, width - height / 12, height, height / 1000 + 1, 0xFF008888);
 	thickLineColor(renderer, 0, height / 12, width, height / 12, height / 1000 + 1, 0xFF00AAAA);
 
@@ -138,4 +141,17 @@ Uint32 incident_add(Uint32 interval, void* param)
 		(*t) = 0;
 		return 0;
 	}
+}
+
+void value_change(ValueData &value)
+{
+	if (value.time % (66 + 36 * 3 * value.level * 15 / value.population) == 0) {
+		value.money += 5 * value.level;
+	}
+	if ((value.time % (1600 + 600 * 3 * value.level * 15 / value.population) == 0) && (value.love <= 100 * value.level)) {
+		value.love += 10 * value.level;
+	}
+	if ((value.time % 3600 == 0) && (value.population < value.level * 35 * 6))
+		value.population *= 2;
+
 }

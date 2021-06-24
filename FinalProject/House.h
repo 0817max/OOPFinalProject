@@ -32,7 +32,7 @@ void createBuilding(Building **&build, const WindowData& fullViewport, int** roa
 			if (c < 8)
 				build[i][j].type = (BuildType)c;
 			else if (c >= 8)
-				build[i][j].type = House;
+				build[i][j].type = (c%2)?House1:House2;
 			c++;
 		}
 	} while (c < 20);
@@ -60,7 +60,6 @@ int addBuild(SDL_Renderer* renderer, const WindowData& fullViewport, const Mouse
 						if (choose == FireSta) {
 							int c = 0, i=0;
 							while (c < 2&&i<CARNUM) {
-								printf("%d %d\n", i, car[i].type);
 								if (car[i].type > 4 || car[i].type == 0) {
 									car[i].velocity = -3;
 									car[i].type = c + 1;
@@ -74,7 +73,6 @@ int addBuild(SDL_Renderer* renderer, const WindowData& fullViewport, const Mouse
 						else if (choose == Logistics) {
 							int i = 0;
 							while (car[i].type <= 4 && car[i].type != 0 && i < CARNUM) {
-								printf("%d %d\n", i, car[i].type);
 								i++;
 							}
 							if (i < CARNUM) {
@@ -87,7 +85,6 @@ int addBuild(SDL_Renderer* renderer, const WindowData& fullViewport, const Mouse
 						else if (choose==PoliceOff){
 							int i = 0;
 							while (car[i].type <= 4 && car[i].type != 0 && i < CARNUM) {
-								printf("%d %d\n", i, car[i].type);
 								i++;
 							}
 							if (i < CARNUM) {
@@ -107,9 +104,9 @@ int addBuild(SDL_Renderer* renderer, const WindowData& fullViewport, const Mouse
 		}
 
 		//Choosing which building would be built
-		else if (mousex >= (width-height/12) && mousey >= (height/ 12)&&mousey<=(height*8/12)) {
+		else if (mousex >= (width-height/12) && mousey >= (height/ 12)&&mousey<=(height*10/12)) {
 			choose = mousey / (height / 12);
-			if (choose == 8)
+			if (choose == 10)
 				choose = 0;
 		}
 	}
@@ -143,6 +140,13 @@ int addBuild(SDL_Renderer* renderer, const WindowData& fullViewport, const Mouse
 			case 7:																		
 				imgRender(renderer, build_pic[9], Middle, mousex, mousey, NULL, height / 12, 1, NULL, NULL, 0, no, 100);
 				break;
+			case 8:
+				imgRender(renderer, build_pic[0], Middle, mousex, mousey, NULL, height / 12, 1, NULL, NULL, 0, no, 100);
+				break;
+			case 9:
+				imgRender(renderer, build_pic[1], Middle, mousex, mousey, NULL, height / 12, 1, NULL, NULL, 0, no, 100);
+				break;
+
 		}
 	}
 	return 0;
@@ -176,8 +180,8 @@ void buildRender(SDL_Renderer* renderer, const WindowData& fullViewport, Buildin
 			x = (double)(width - height / 12) / (wnum + 1) * (build[i][j].x + 1);
 			y = height / 12 + (double)(height - height / 12) / (hnum + 1) * (build[i][j].y + 1);
 			
-			if (build[i][j].type == House) {
-				t = (i + j) % 2;
+			if (build[i][j].type >=8) {
+				t = build[i][j].type - 8;
 				imgRender(renderer, build_pic[t], build[i][j].Pos, x, y, fmin((width-height/12)/ (wnum + 1)*8/10, (height - height / 12 ) / (hnum + 1) *4/6* build_pic[t].width / build_pic[t].height), (height - height / 12) / (hnum + 1) * 4 / 6, 1, NULL, NULL, 0, no, 255);
 			}
 			else {
