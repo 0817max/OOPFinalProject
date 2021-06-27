@@ -4,144 +4,179 @@
 int carMenu(SDL_Renderer* renderer, const WindowData& fullViewport, MouseState mouseState, int mousex, int mousey, int& choose, ImageData car_pic[]);
 void bestRoute(const WindowData& fullViewport, double** distance, int y, int x, int direction);
 bool existDirection(int hnum, int wnum, int y, int x, int direction);
-char* createPath(const WindowData& fullViewport, double start_xnum, double start_y, bool verticle, bool intersect, int house_hnum, int house_wnum, int& length);
+char* createPath(const WindowData& fullViewport, double start_y, double start_x, bool intersect, double end_ynum, double end_xnum, bool house_point, int& length);
 void fillIntersect(char* intersect, int direction1, int direction2, int num);
 bool equalIntersect(char* intersect, int direction1, int direction2, int num);
 
-void createCar(CarData& car, WindowData& fullViewport, int start_ynum, int start_xnum, int house_hnum, int house_wnum, int type, ImageData car_pic[]) {
+void createCar(CarData& car, WindowData& fullViewport, double house_hnum, double house_wnum, bool house_point, int type, ImageData car_pic[]) {
 	int width = fullViewport.w, height = fullViewport.h, wnum = fullViewport.wnum, hnum = fullViewport.hnum, oldw=fullViewport.oldw, oldh=fullViewport.oldh;
 
 	char* path;
 	car.length = INT_MAX;
 	car.path = NULL;
-	int choose, length;
-	//Run for four times to choose the shortest path
-	if ((checkRoad(start_ynum, start_xnum) >> 3) % 2) {		//top road
-		if (start_xnum == house_wnum && (start_ynum == house_hnum + 1|| start_ynum == house_hnum)) {
-			car.length = 0;
-			choose = 3;
-			car.velocity = -2;
-			car.path = new char[1]{2};
-		}
-		else {
-			path = createPath(fullViewport, start_ynum+0.5, start_xnum+1, false, false, house_hnum, house_wnum, length);
-			if (car.length > length) {
-				car.length = length;
-				if (car.path) {
-					delete[]car.path;
-					car.path = NULL;
-				}
-				car.path = path;
+	int choose=-1, length;
+	//Run for four times to choose the shortest path, beginning
+	if (car.x == 0 && car.y == 0) {
+		if ((checkRoad((int)(car.home_y-1), (int)(car.home_x-1)) >> 3) % 2) {		//top road
+			if (car.home_x == house_wnum && (car.home_y == house_hnum + 1 || car.home_y == house_hnum)) {
+				car.length = 0;
 				choose = 3;
+				car.velocity = -2;
+				car.path = new char[1]{ 2 };
 			}
-			else
-				delete[]path;
-		}
-	}
-	if ((checkRoad(start_ynum, start_xnum) >> 2) % 2&&car.length) {		//right road
-		if ((start_xnum == house_wnum-1|| start_xnum == house_wnum) && start_ynum == house_hnum) {
-			car.length = 0;
-			choose = 2;
-			car.velocity = -2;
-			car.path = new char[1]{ 1 };
-		}
-		else {
-			path = createPath(fullViewport, start_ynum+1, start_xnum + 1.5, true, false, house_hnum, house_wnum, length);
-			if (car.length > length) {
-				car.length = length;
-				if (car.path) {
-					delete[]car.path;
-					car.path = NULL;
+			else {
+				printf("3\n");
+				path = createPath(fullViewport, car.home_y - 0.5, car.home_x, false, house_hnum, house_wnum,house_point, length);
+				if (car.length > length) {
+					car.length = length;
+					if (car.path) {
+						delete[]car.path;
+						car.path = NULL;
+					}
+					car.path = path;
+					choose = 3;
 				}
-				car.path = path;
+				else
+					delete[]path;
+			}
+		}
+		if ((checkRoad((int)(car.home_y-1), (int)(car.home_x-1)) >> 2) % 2 && car.length) {		//right road
+			if ((car.home_x == house_wnum - 1 || car.home_x == house_wnum) && car.home_y == house_hnum) {
+				car.length = 0;
 				choose = 2;
+				car.velocity = -2;
+				car.path = new char[1]{ 1 };
 			}
-			else
-				delete[]path;
-		}
-	}
-	if ((checkRoad(start_ynum, start_xnum) >> 1) % 2&&car.length) {		//bottom road
-		if (start_xnum == house_wnum && (start_ynum == house_hnum - 1|| start_ynum == house_hnum)) {
-			car.length = 0;
-			choose = 1;
-			car.velocity = -2;
-			car.path = new char[1]{ 0 };
-		}
-		else {
-			path = createPath(fullViewport, start_ynum + 1.5, start_xnum+1, false, false, house_hnum, house_wnum, length);
-			if (car.length > length) {
-				car.length = length;
-				if (car.path) {
-					delete[]car.path;
-					car.path = NULL;
+			else {
+				printf("2\n");
+				path = createPath(fullViewport, car.home_y, car.home_x + 0.5, false, house_hnum, house_wnum, house_point, length);
+				if (car.length > length) {
+					car.length = length;
+					if (car.path) {
+						delete[]car.path;
+						car.path = NULL;
+					}
+					car.path = path;
+					choose = 2;
 				}
-				car.path = path;
+				else
+					delete[]path;
+			}
+		}
+		if ((checkRoad((int)(car.home_y-1), (int)(car.home_x-1)) >> 1) % 2 && car.length) {		//bottom road
+			if (car.home_x == house_wnum && (car.home_y == house_hnum - 1 || car.home_y == house_hnum)) {
+				car.length = 0;
 				choose = 1;
+				car.velocity = -2;
+				car.path = new char[1]{ 0 };
 			}
-			else
-				delete[]path;
+			else {
+				printf("1\n");
+				path = createPath(fullViewport, car.home_y + 0.5, car.home_x, false, house_hnum, house_wnum, house_point, length);
+				if (car.length > length) {
+					car.length = length;
+					if (car.path) {
+						delete[]car.path;
+						car.path = NULL;
+					}
+					car.path = path;
+					choose = 1;
+				}
+				else
+					delete[]path;
+			}
+		}
+		if ((checkRoad((int)(car.home_y-1), (int)(car.home_x-1))) % 2 && car.length) {		//left road
+			if ((car.home_x == house_wnum + 1 || car.home_x == house_wnum) && car.home_y == house_hnum) {
+				car.length = 0;
+				choose = 0;
+				car.velocity = -2;
+				car.path = new char[1]{ 3 };
+			}
+			else {
+				printf("0\n");
+				path = createPath(fullViewport, car.home_y, car.home_x - 0.5, false, house_hnum, house_wnum, house_point, length);
+				if (car.length > length) {
+					car.length = length;
+					if (car.path) {
+						delete[]car.path;
+						car.path = NULL;
+					}
+					car.path = path;
+					choose = 0;
+				}
+			}
+		}
+		//Intialize the starting point
+		switch (choose) {
+		case 3:
+			car.x = (car.home_x);
+			car.y = (car.home_y - 0.5);
+			break;
+		case 2:
+			car.x = (car.home_x + 0.5);
+			car.y = (car.home_y);
+			break;
+		case 1:
+			car.x = (car.home_x);
+			car.y = (car.home_y + 0.5);
+			break;
+		case 0:
+			car.x = (car.home_x - 0.5);
+			car.y = (car.home_y);
+			break;
 		}
 	}
-	if ((checkRoad(start_ynum, start_xnum)) % 2&&car.length) {		//left road
-		if ((start_xnum == house_wnum+1|| start_xnum == house_wnum) && start_ynum == house_hnum) {
-			car.length = 0;
-			choose = 0;
-			car.velocity = -2;
-			car.path = new char[1]{ 3 };
+	else {
+		if (checkIntersect(fullViewport, road, car.y, car.x)) {
+			car.intersect = true;
 		}
-		else {
-			path = createPath(fullViewport, start_ynum+1, start_xnum+0.5, true, false, house_hnum, house_wnum, length);
-			if (car.length > length) {
-				car.length = length;
-				if (car.path) {
-					delete[]car.path;
-					car.path = NULL;
-				}
-				car.path = path;
-				choose = 0;
+		else
+			car.intersect = false;
+		//start on the vertical road
+		if ((car.x - 0.5) == (int)car.x) {
+			if (fabs(car.x - house_wnum) <= 0.51 && house_hnum == (int)(car.y + 0.5)) {
+				car.length = 0;
+				car.velocity = -2;
+				car.path = new char[1]{ 3 };
 			}
-			else
-				delete[]path;
+			else {
+				car.path = createPath(fullViewport, car.y, car.x, car.intersect, house_hnum, house_wnum, house_point, length);
+				car.length = length;
+			}
+		}
+		//start on the horizontal road
+		else{
+			if (fabs(car.y - house_hnum) <= 0.51 && house_wnum == (int)(car.x + 0.5)) {
+				car.length = 0;
+				car.velocity = -2;
+				car.path = new char[1]{ 2 };
+			}
+			else {
+				car.path = createPath(fullViewport, car.y, car.x, car.intersect, house_hnum, house_wnum, house_point, length);
+				car.length = length;
+			}
 		}
 	}
 
-	//Intialize the starting point
-	switch (choose) {
-		case 3:
-			car.x = (start_xnum + 1.);
-			car.y = (start_ynum + 0.5);
-			break;
-		case 2:
-			car.x = (start_xnum + 1.5);
-			car.y = (start_ynum + 1);
-			break;
-		case 1:
-			car.x = (start_xnum + 1.);
-			car.y = (start_ynum + 1.5);
-			break;
-		case 0:
-			car.x = (start_xnum + 0.5);
-			car.y = (start_ynum + 1);
-			break;
-	}
 
 	//Initialize other information
 	car.window = &fullViewport;
 	car.type = type;
 	car.i = 0;
 	car.angle = (3-car.path[0])*90;
-	car.home_ynum = house_hnum;
-	car.home_xnum = house_wnum;
+	car.home_y = house_hnum;
+	car.home_x = house_wnum;
 	if(car.length)
 		car.velocity = 0.01;
 	car.intersect = false;
 }
 
-int addCar(SDL_Renderer* renderer, WindowData& fullViewport, MouseState mouseState, int mousex, int mousey, Building**& build , CarData car[], ImageData car_pic[]) {
+int addCar(SDL_Renderer* renderer, WindowData& fullViewport, const MouseState& mouseState, const int& mousex, const int& mousey, const EventData &event, Building**& build , CarData car[], ImageData car_pic[]) {
 	int width = fullViewport.w, height = fullViewport.h, wnum = fullViewport.wnum, hnum = fullViewport.hnum, xnum, ynum;
 	static int choose = 0, select=0;
 	static SDL_TimerID timerID_clock;
-	
+	double x, y;
 	//Cliking the flag
 	if (select) {
 		if(!carMenu(renderer, fullViewport, mouseState, mousex, mousey,choose, car_pic))	//false for quit
@@ -159,27 +194,59 @@ int addCar(SDL_Renderer* renderer, WindowData& fullViewport, MouseState mouseSta
 		
 		//If choose, create car from special building to determined point
 		if (choose) {
-			if (mousex > (width - height / 12) / wnum / 2 && mousex<(width - height / 12 - (width - height / 12) / wnum / 2) && mousey >(height / 12 + ((height - height / 12) / hnum) / 2) && mousey < (height - ((height - height / 12) / hnum) / 2)) {
-				xnum = (mousex - (width - height / 12) / wnum / 2) / ((width - height / 12) / wnum);
-				ynum = (mousey - height / 12 - (height - height / 12) / hnum / 2) / ((height - height / 12) / hnum);
-				if (build[ynum][xnum].type == Empty) {
+			x = (double)mousex / ((width - height / 12) / wnum);
+			y = (double)(mousey - height / 12) / ((height - height / 12) / hnum);
+			printf("%d %lf %lf %lf %lf\n", choose, x, y, event.x, event.y);
+			if (choose == 4 && (event.type==1||event.type==2)&&fabs(event.x-x)<0.3&& fabs(event.y - y) < 0.5) {
+				CarData t, min;
+				int length = INT_MAX, min_num = -1;
+				//search for stopping special car
+				for (int i = 0; i < CARNUM; i++)
+					if (car[i].type == choose && car[i].velocity < 0) {
+						if (!car[i].path)
+							delete[](car[i].path);
+						t = car[i];
+						createCar(t, fullViewport, event.y, event.x, true, choose, car_pic);
+						//find the closet car
+						if (t.length < length) {
+							min = t;
+							min_num = i;
+						}
+						else
+							delete t.path;
+					}
+				//there is no car
+				if (min_num == -1) {
+					return 4;
+				}
+				else {
+					car[min_num] = min;
+					choose = 0;
+				}
+			}
+			else if (mousex > (width - height / 12) / wnum / 2 && mousex<(width - height / 12 - (width - height / 12) / wnum / 2) && mousey >(height / 12 + ((height - height / 12) / hnum) / 2) && mousey < (height - ((height - height / 12) / hnum) / 2)) {
+				x = (mousex - (width - height / 12) / wnum / 2) / ((width - height / 12) / wnum)+1;
+				y = (mousey - height / 12 - (height - height / 12) / hnum / 2) / ((height - height / 12) / hnum)+1;
+				if (build[(int)(y-1)][(int)(x-1)].type == Empty) {
 					return 3;
 				}
 				else{
 					CarData t, min;
-					t.path=min.path = NULL;
 					int length = INT_MAX, min_num=-1;
 					//search for stopping special car
 					for (int i = 0; i < CARNUM; i++)
 						if (car[i].type == choose && car[i].velocity < 0) {
 							if (!car[i].path)
 								delete[](car[i].path);
-							createCar(t, fullViewport, car[i].home_ynum, car[i].home_xnum, ynum, xnum, choose, car_pic);
+							t = car[i];
+							createCar(t, fullViewport, y, x, false, choose, car_pic);
 							//find the closet car
 							if (t.length < length) {
 								min = t;
 								min_num = i;
 							}
+							else
+								delete t.path;
 						}
 					//there is no car
 					if (min_num == -1) {
@@ -198,7 +265,6 @@ int addCar(SDL_Renderer* renderer, WindowData& fullViewport, MouseState mouseSta
 			select = 1;
 		}
 	}
-	
 	//Fixed chosen car on mouse
 	else {
 		switch (choose) {
@@ -268,7 +334,10 @@ void carRender(SDL_Renderer* renderer, const WindowData& fullViewport, CarData c
 
 		//cloud for car
 		if (car[i].velocity < -1) {
-			imgRender(renderer, cloud_pic[0], Middle, (car[i].home_xnum+1) * (width - height / 12) / wnum, (car[i].home_ynum+1) * (height * 11 / 12) / hnum + (height / 12), (width - height / 12) / wnum*0.9, NULL, 1, NULL, NULL, 0, no, (int)(255*(-1-car[i].velocity))%255);
+			if (car[i].type == 4 && (car[i].home_x!=(int)car[i].home_x|| car[i].home_y != (int)car[i].home_y))
+				imgRender(renderer, cloud_pic[0], Middle, car[i].x * (width - height / 12) / wnum, car[i].y * (height * 11 / 12) / hnum + (height / 12), fmin((width - height / 12) / wnum / 10., height * 11 / 12 / hnum / 6.),NULL, 1, NULL, NULL, 0, no, (int)(255 * (-1 - car[i].velocity)) % 255);
+			else
+				imgRender(renderer, cloud_pic[0], Middle, (car[i].home_x) * (width - height / 12) / wnum, (car[i].home_y) * (height * 11 / 12) / hnum + (height / 12), (width - height / 12) / wnum*0.9, NULL, 1, NULL, NULL, 0, no, (int)(255*(-1-car[i].velocity))%255);
 		}
 		if (car[i].velocity < 0) {
 			if (!car[i].path) {
@@ -320,10 +389,10 @@ Uint32 car_move(Uint32 interval, void* param)
 							CarIntersect[j][k][l] = 0;
 		}
 		//disappearing special car
-		if (t[i].velocity < -1) {
+		/*if (t[i].velocity < -1) {
 			t[i].velocity += 0.004;
 			continue;
-		}
+		}*/
 		//printf("%d\n", i);
 		//If velocity =-1, car disappear
 		if (t[i].velocity < 0) {
@@ -644,25 +713,26 @@ Uint32 car_move(Uint32 interval, void* param)
 	return interval;
 } 
 
-char* createPath(const WindowData& fullViewport, double start_y, double start_x, bool verticle, bool intersect, int house_hnum, int house_wnum, int &length) {
+char* createPath(const WindowData& fullViewport, double start_y, double start_x, bool intersect,  double end_y, double end_x, bool house_point, int &length) {
 	int wnum = fullViewport.wnum, hnum = fullViewport.hnum;
 	
 	//create diatance map
 	double** distance = new double* [hnum];
 	double min_dis = (double)INT_MAX;
 	int min_disp=0;
+	char* path;
 	for (int i = 0; i < hnum; i++) {
 		distance[i] = new double[wnum];
 		for (int j = 0; j < wnum; j++)
 			distance[i][j] = 1e8;
 	}
 	
-	//start on the verticle road
 	if (intersect) {
 		distance[(int)(start_y)][(int)start_x] = 0;
 		bestRoute(fullViewport, distance, (int)(start_y), (int)(start_x), 4);
 	}
-	else if (verticle) {
+	//start on the vertical road
+	else if (fabs(start_x - 0.5 - (int)start_x) < 1e-3) {
 		if (existDirection(hnum, wnum, (int)(start_y-0.5), (int)start_x, 1)) {
 			distance[(int)(start_y - 0.5)][(int)start_x] = start_y-0.5-(int)(start_y-0.5);
 			distance[(int)(start_y + 0.5)][(int)start_x] = (int)(start_y + 0.5)-start_y + 0.5;
@@ -680,57 +750,171 @@ char* createPath(const WindowData& fullViewport, double start_y, double start_x,
 		}
 	}
 	//find the shortest corner to the destination
-	//top road
-	if ((checkRoad(house_hnum, house_wnum) >> 3) % 2) {		
-		if (min_dis > distance[house_hnum][house_wnum]) {
-			min_dis = distance[house_hnum][house_wnum];
-			min_disp = 3;
-		}
-		if (min_dis > distance[house_hnum][house_wnum + 1]) {
-			min_dis = distance[house_hnum][house_wnum+1];
-			min_disp = 3;
-		}
-	}
-	//right road
-	if ((checkRoad(house_hnum, house_wnum) >> 2)%2) {		
-		if (min_dis > distance[house_hnum][house_wnum+1]) {
-			min_dis = distance[house_hnum][house_wnum+1];
-			min_disp = 2;
-		}
-		if (min_dis > distance[house_hnum+1][house_wnum + 1]) {
-			min_dis = distance[house_hnum+1][house_wnum + 1];
-			min_disp = 2;
-		}
-	}
-	//bottom road
-	if ((checkRoad(house_hnum, house_wnum) >> 1)%2) {		
-		if (min_dis > distance[house_hnum+1][house_wnum]) {
-			min_dis = distance[house_hnum+1][house_wnum];
-			min_disp = 1;
-		}
-		if (min_dis > distance[house_hnum+1][house_wnum + 1]) {
-			min_dis = distance[house_hnum+1][house_wnum + 1];
-			min_disp = 1;
-		}
-	}
-	//left road
-	if (checkRoad(house_hnum, house_wnum)%2) {				
-		if (min_dis > distance[house_hnum][house_wnum]) {
-			min_dis = distance[house_hnum][house_wnum];
+	if (house_point) {
+		if (checkIntersect(fullViewport, road, end_y, end_x)) {
+			min_dis=distance[(int)(end_y-0.5)][(int)(end_x-0.5)];
 			min_disp = 0;
 		}
-		if (min_dis > distance[house_hnum+1][house_wnum]) {
-			min_dis = distance[house_hnum+1][house_wnum];
-			min_disp = 0;
+		//end on the vertical road
+		else if (fabs(end_x - 0.5 - (int)end_x) < 1e-3) {
+			if (min_dis > distance[(int)(end_y-0.5)][(int)(end_x-0.5)]) {
+				min_dis = distance[(int)(end_y-0.5)][(int)(end_x-0.5)];
+				min_disp = 0;
+			}
+			if (min_dis > distance[(int)(end_y+0.5)][(int)(end_x-0.5)]) {
+				min_dis = distance[(int)(end_y+0.5)][(int)(end_x-0.5)];
+				min_disp = 1;
+			}
+		}
+		//end on the horizontal road
+		else {
+			if (min_dis > distance[(int)(end_y-0.5)][(int)(end_x-0.5)]) {
+				min_dis = distance[(int)(end_y-0.5)][(int)(end_x-0.5)];
+				min_disp = 0;
+			}
+			if (min_dis > distance[(int)(end_y-0.5)][(int)(end_x+0.5)]) {
+				min_dis = distance[(int)(end_y-0.5)][(int)(end_x+0.5)];
+				min_disp = 1;
+			}
+		}
+		//retrace the shortest path(from destination to the starting point)
+		if (min_dis == INT_MAX) {
+			return NULL;
+		}
+		length = (int)(min_dis + 1);
+		path = new char[length + 1];
+		int y, x;
+		//find the direction from destination point to house and initialize the starting point of retracing
+		switch (min_disp) {
+		case 1:
+			//end on the vertical road
+			if (fabs(end_x - 0.5 - (int)end_x) < 1e-3) {
+				path[length] = 3;
+				y = (int)(end_y+0.5), x = (int)(end_x-0.5);
+			}
+			//end on the horizontal road
+			else {
+				path[length] = 0;
+				y = (int)(end_y-0.5), x = (int)(end_x+0.5);
+			}
+			break;
+		case 0:
+			if (checkIntersect(fullViewport, road, end_y, end_x)) {
+				path[length] = -1;
+				y = (int)(end_y - 0.5), x = (int)(end_x - 0.5);
+			}
+			//end on the vertical road
+			else if (fabs(end_x - 0.5-(int)end_x)<1e-3) {
+				path[length] = 1;
+				y = (int)(end_y-0.5), x = (int)(end_x-0.5);
+			}
+			//end on the horizontal road
+			else {
+				path[length] = 2;
+				y = (int)(end_y-0.5), x = (int)(end_x-0.5);
+			
+			}
+			break;
+		}
+		for (int i = length - 1; i > 0; i--) {
+			if (x > 0) {
+				if ((distance[y][x - 1] == distance[y][x] - 1) && existDirection(hnum, wnum, y, x - 1, 2)) {
+					x -= 1;
+					path[i] = 2;
+					continue;
+				}
+			}
+			if (y < hnum - 1) {
+				if ((distance[y + 1][x] == distance[y][x] - 1) && existDirection(hnum, wnum, y + 1, x, 3)) {
+					y += 1;
+					path[i] = 3;
+					continue;
+				}
+			}
+			if (x < wnum - 1) {
+				if ((distance[y][x + 1] == distance[y][x] - 1) && existDirection(hnum, wnum, y, x + 1, 0)) {
+					x += 1;
+					path[i] = 0;
+					continue;
+				}
+			}
+			if (y > 0) {
+				if ((distance[y - 1][x] == distance[y][x] - 1) && existDirection(hnum, wnum, y - 1, x, 1)) {
+					y -= 1;
+					path[i] = 1;
+					continue;
+				}
+			}
+		}
+		//determine the direction from house to the closet corner 
+		if (intersect) {
+			path[0] = path[1];
+		}
+		else if (fabs(start_x - 0.5 - (int)start_x) < 1e-3) {
+			if (x == (int)(start_x) && fabs(y + 1 - (int)start_y) < 1e-3)
+				path[0] = 3;
+			else
+				path[0] = 1;
+		}
+		else {
+			if (fabs(x + 1 - (int)start_x) < 1e-3 && y == (int)(start_y))
+				path[0] = 0;
+			else
+				path[0] = 2;
 		}
 	}
-
-	//retrace the shortest path(from destination to the starting point)
-	length = (int)(min_dis+1);
-	char* path=new char [length+1];
-	int y, x;
-	//find the direction from destination point to house and initialize the starting point of retracing
-	switch (min_disp) {
+	else {
+		int house_hnum = (int)end_y-1, house_wnum = (int)end_x-1;
+		//top road
+		if ((checkRoad(house_hnum, house_wnum) >> 3) % 2) {
+			if (min_dis > distance[house_hnum][house_wnum]) {
+				min_dis = distance[house_hnum][house_wnum];
+				min_disp = 3;
+			}
+			if (min_dis > distance[house_hnum][house_wnum + 1]) {
+				min_dis = distance[house_hnum][house_wnum + 1];
+				min_disp = 3;
+			}
+		}
+		//right road
+		if ((checkRoad(house_hnum, house_wnum) >> 2) % 2) {
+			if (min_dis > distance[house_hnum][house_wnum + 1]) {
+				min_dis = distance[house_hnum][house_wnum + 1];
+				min_disp = 2;
+			}
+			if (min_dis > distance[house_hnum + 1][house_wnum + 1]) {
+				min_dis = distance[house_hnum + 1][house_wnum + 1];
+				min_disp = 2;
+			}
+		}
+		//bottom road
+		if ((checkRoad(house_hnum, house_wnum) >> 1) % 2) {
+			if (min_dis > distance[house_hnum + 1][house_wnum]) {
+				min_dis = distance[house_hnum + 1][house_wnum];
+				min_disp = 1;
+			}
+			if (min_dis > distance[house_hnum + 1][house_wnum + 1]) {
+				min_dis = distance[house_hnum + 1][house_wnum + 1];
+				min_disp = 1;
+			}
+		}
+		//left road
+		if (checkRoad(house_hnum, house_wnum) % 2) {
+			if (min_dis > distance[house_hnum][house_wnum]) {
+				min_dis = distance[house_hnum][house_wnum];
+				min_disp = 0;
+			}
+			if (min_dis > distance[house_hnum + 1][house_wnum]) {
+				min_dis = distance[house_hnum + 1][house_wnum];
+				min_disp = 0;
+			}
+		}
+		//retrace the shortest path(from destination to the starting point)
+		length = (int)(min_dis + 1);
+		path = new char[length + 1];
+		int y, x;
+		//find the direction from destination point to house and initialize the starting point of retracing
+		switch (min_disp) {
 		case 3:
 			y = house_hnum;
 			if (distance[house_hnum][house_wnum] < distance[house_hnum][house_wnum + 1]) {
@@ -743,8 +927,8 @@ char* createPath(const WindowData& fullViewport, double start_y, double start_x,
 			}
 			break;
 		case 2:
-			x = house_wnum+1;
-			if (distance[house_hnum][house_wnum+1] < distance[house_hnum+1][house_wnum + 1]) {
+			x = house_wnum + 1;
+			if (distance[house_hnum][house_wnum + 1] < distance[house_hnum + 1][house_wnum + 1]) {
 				y = house_hnum;
 				path[length] = 1;
 			}
@@ -754,8 +938,8 @@ char* createPath(const WindowData& fullViewport, double start_y, double start_x,
 			}
 			break;
 		case 1:
-			y = house_hnum+1;
-			if (distance[house_hnum+1][house_wnum] < distance[house_hnum+1][house_wnum + 1]) {
+			y = house_hnum + 1;
+			if (distance[house_hnum + 1][house_wnum] < distance[house_hnum + 1][house_wnum + 1]) {
 				x = house_wnum;
 				path[length] = 2;
 			}
@@ -775,59 +959,65 @@ char* createPath(const WindowData& fullViewport, double start_y, double start_x,
 				path[length] = 3;
 			}
 			break;
-	}
-	for (int i = length - 1; i > 0; i--) {
-		if (x > 0) {
-			if ((distance[y][x - 1] == distance[y][x] - 1) && existDirection(hnum, wnum, y, x-1, 2)) {
-				x -= 1;
-				path[i] = 2;
-				continue;
+		}
+		for (int i = length - 1; i > 0; i--) {
+			if (x > 0) {
+				if ((fabs(distance[y][x] - distance[y][x - 1] - 1)<1e-4) && existDirection(hnum, wnum, y, x - 1, 2)) {
+					x -= 1;
+					path[i] = 2;
+					continue;
+				}
+			}
+			if (y < hnum - 1) {
+				if ((fabs(distance[y][x] - distance[y+1][x] - 1) < 1e-4) && existDirection(hnum, wnum, y + 1, x, 3)) {
+					y += 1;
+					path[i] = 3;
+					continue;
+				}
+			}
+			if (x < wnum - 1) {
+				if ((fabs(distance[y][x] - distance[y][x+1] - 1) < 1e-4) && existDirection(hnum, wnum, y, x + 1, 0)) {
+					x += 1;
+					path[i] = 0;
+					continue;
+				}
+			}
+			if (y > 0) {
+				if ((fabs(distance[y][x] - distance[y - 1][x] - 1) < 1e-4) && existDirection(hnum, wnum, y - 1, x, 1)) {
+					y -= 1;
+					path[i] = 1;
+					continue;
+				}
 			}
 		}
-		if(y<hnum-1){
-			if ((distance[y + 1][x] == distance[y][x] - 1)&&existDirection(hnum, wnum, y+1, x, 3)) {
-				y += 1;
-				path[i] = 3;
-				continue;
-			}
+		//determine the direction from house to the closet corner 
+		if (intersect) {
+			path[0] = path[1];
 		}
-		if(x<wnum-1){
-			if ((distance[y][x + 1] == distance[y][x] - 1)&& existDirection(hnum, wnum, y, x+1, 0)) {
-				x += 1;
-				path[i] = 0;
-				continue;
-			}
+		else if ((start_x - 0.5) == (int)start_x) {
+			if (x == (int)(start_x) && y == (int)(start_y - 0.5))
+				path[0] = 3;
+			else
+				path[0] = 1;
 		}
-		if(y>0){
-			if ((distance[y - 1][x] == distance[y][x] - 1)&& existDirection(hnum, wnum, y-1, x, 1)) {
-				y -= 1;
-				path[i] = 1;
-				continue;
-			}
+		else {
+			if (x == (int)(start_x - 0.5) && y == (int)(start_y))
+				path[0] = 0;
+			else
+				path[0] = 2;
 		}
 	}
-	//determine the direction from house to the closet corner 
-	if (intersect) {
-		path[0] = path[1];
-	}
-	else if (verticle) {
-		if (x == (int)(start_x) && y == (int)(start_y-0.5))
-			path[0] = 3;
-		else
-			path[0] = 1;
-	}
-	else {
-		if (x == (int)(start_x-0.5) && y == (int)(start_y))
-			path[0] = 0;
-		else
-			path[0] = 2;
-	}
-	/*for (int i = 0; i < hnum; i++) {
+	for (int i = 0; i < hnum; i++) {
 		for (int j = 0; j < wnum; j++)
 			printf("%lg ", distance[i][j]);
 		printf("\n");
 	}
-	printf("\n");*/
+	printf("\n");
+	/*for (int i = 0; i < length + 1; i++) {
+		printf("%d ", path[i]);
+	}
+	printf("\n\n");*/
+	//printf("%d ", length);
 	for (int i = 0; i < hnum; i++)
 		delete[]distance[i];
 	delete[]distance;
@@ -837,25 +1027,25 @@ char* createPath(const WindowData& fullViewport, double start_y, double start_x,
 void bestRoute(const WindowData& fullViewport, double **distance, int y, int x, int direction) {
 	int wnum = fullViewport.wnum, hnum = fullViewport.hnum;
 	if (direction != 1 && existDirection(hnum, wnum, y, x, 3)) {		//go up
-		if (distance[y - 1][x] > distance[y][x]) {
+		if (distance[y - 1][x] > distance[y][x]+1) {
 			distance[y - 1][x] = distance[y][x] + 1;
 			bestRoute(fullViewport, distance, y - 1, x, 3);
 		}
 	}
 	if (direction != 3 && existDirection(hnum, wnum, y, x, 1)) {	//go down
-		if (distance[y + 1][x] > distance[y][x]) {
+		if (distance[y + 1][x] > distance[y][x]+1) {
 			distance[y + 1][x] = distance[y][x] + 1;
 			bestRoute(fullViewport, distance, y + 1, x, 1);
 		}
 	}
 	if (direction != 2 && existDirection(hnum, wnum, y, x, 0)) {  //go left
-		if (distance[y][x - 1] > distance[y][x]) {
+		if (distance[y][x - 1] > distance[y][x]+1) {
 			distance[y][x - 1] = distance[y][x] + 1;
 			bestRoute(fullViewport, distance, y, x - 1, 0);
 		}
 	}
 	if (direction != 0 && existDirection(hnum, wnum, y, x, 2)) {  //go right
-		if (distance[y][x + 1] > distance[y][x]) {
+		if (distance[y][x + 1] > distance[y][x]+1) {
 			distance[y][x + 1] = distance[y][x] + 1;
 			bestRoute(fullViewport, distance, y, x + 1, 2);
 		}

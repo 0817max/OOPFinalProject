@@ -1,18 +1,8 @@
-struct EventData {
-	int season;	//	0:spring	1:summer	2:fall	3:winter
-	int level;
-	double x, y;
-	bool exist;
-	int type;	//	0:fire	1:car accident	2:road closure	3:delivery	4:thief	5:lightening	6:no event
-	ImageData* img;
-	int time; //time start from the event created
-	int* p;
-	int* m;
-	int* l;
-};
-void createEvent(EventData& e, WindowData& fullViewport, ImageData event_pic[], Building**& build, ValueData* value) {
-	e.p = &(value->population), e.m = &(value->money), e.l =&(value->love);
+void createEvent(EventData& e, WindowData& fullViewport, ImageData event_pic[], Building**& build, ValueData* value, CarData car[]) {
 	e.level = value->level, e.season = value->season;
+	e.car = car;
+	e.value = value;
+	int sx, sy;
 	/*int p, q;
 	int* type = new int[6];
 	do {
@@ -180,67 +170,276 @@ void createEvent(EventData& e, WindowData& fullViewport, ImageData event_pic[], 
 	} while (!((e.exist == true) && (e.type == 6)) && !((e.exist == false) && (e.type != 6)));
 	delete[]type;*/
 	e.exist = true;
-	e.type = 0;
+	e.type = rand()%6;
 	e.time = 0;
-	if (e.type != 6)
-		e.img = &event_pic[e.type];
-	else
-		e.img = NULL;
-	int width = fullViewport.w, height = fullViewport.h, hnum = fullViewport.hnum - 1, wnum = fullViewport.wnum - 1;
-	int x, y;
-	do {
-		x = rand() % wnum;
-		y = rand() % hnum;
-	} while (build[y][x].type == Empty);
-	if (e.exist = true) {
-		e.x = (double)(width - height / 12) / (wnum + 1) * (x + 1);
-		e.y = height / 12 + (double)(height - height / 12) / (hnum + 1) * (y + 1);
+	e.img = event_pic;
+	int hnum = fullViewport.hnum - 1, wnum = fullViewport.wnum - 1;
+	if ((e.type == 0) || (e.type == 3) || (e.type == 4) || (e.type == 5)) {
+		do {
+			sx = rand() % wnum;
+			sy = rand() % hnum;
+		} while (build[sy][sx].type == Empty);
+		if (e.exist = true) {
+			e.x = (sx + 1);
+			e.y = (sy + 1);
+		}
+	}
+	else if ((e.type == 1) || (e.type == 2)) {
+		e.h = rand() % 2;
+		if (e.h == 1) {
+			do {
+				sx = rand() % (wnum - 1);
+				sy = rand() % hnum;
+			} while (((road[sy][sx] >> 8) % 2) * (road[sy][sx + 1] % 2)==0);
+			if (e.exist = true) {
+				e.x =  (sx + 1);
+				e.y =  (sy + 0.5);
+			}
+			road[sy][sx] += 0x0100;
+			road[sy][sx + 1] += 0x0001;
+		}
+		else if (e.h == 0) {
+			do {
+				sx = rand() % wnum;
+				sy = rand() % (hnum - 1);
+			} while (((road[sy][sx] >> 4) % 2) * ((road[sy + 1][sx] >> 12) % 2)==0);
+			if (e.exist = true) {
+				e.x = (sx + 0.5);
+				e.y = (sy + 1);
+			}
+			road[sy][sx] += 0x0010;
+			road[sy + 1][sx] += 0x1000;
+
+		}
 	}
 }
-/*event ending result
-void Fire(SDL_Renderer* renderer, WindowData fullViewport, EventData e) {
+void Fire(EventData& e, ValueData& value) {
+	if (e.time <= 16 - (e.level)) {
+		value.love += 25 + e.level * e.level * 5;
+		e.time = -510;
+	}
+	else {
+		value.love -= 25 * e.level * e.level;
+		value.population -= 4 * e.level;
+		value.money -= 100 + 5 * e.level * e.level;
+		e.time = -255;
+	}
 
 }
-void CarAccident(SDL_Renderer* renderer, WindowData fullViewport, EventData e) {
+void FireRender(SDL_Renderer* renderer, WindowData& fullViewport, EventData& e, ImageData cloud_pic[]) {
+	int width = fullViewport.w, height = fullViewport.h, hnum = fullViewport.hnum - 1, wnum = fullViewport.wnum - 1;
+	if (e.time < -255)
+		imgRender(renderer, cloud_pic[0], Middle, e.x * (width - height / 12) / (wnum + 1), e.y * (height - height / 12) / (hnum + 1) + height / 12, fmin((width - height / 12) / (wnum + 1) * 8 / 10, (height - height / 12) / (hnum + 1) * 4 / 6 * cloud_pic[0].width / cloud_pic[0].height), NULL, 1, NULL, NULL, 0, no, -e.time - 255);
+	else
+		imgRender(renderer, cloud_pic[1], Middle, e.x * (width - height / 12) / (wnum + 1), e.y * (height - height / 12) / (hnum + 1) + height / 12, fmin((width - height / 12) / (wnum + 1) * 8 / 10, (height - height / 12) / (hnum + 1) * 4 / 6 * cloud_pic[1].width / cloud_pic[1].height), NULL, 1, NULL, NULL, 0, no, -e.time);
 
 }
-void RoadClosure(SDL_Renderer* renderer, WindowData fullViewport, EventData e) {
+void CarAccident(EventData& e, ValueData& value) {
+	int sx, sy;
+	if (e.time <= 18 - (e.level)) {
+		value.love += 20 + e.level * e.level * 5;
+		e.time = -510;
+	}
+	else {
+		value.love -= 25 * e.level * e.level;
+		value.population -= 2 * e.level;
+		value.money -= 100 + 5 * e.level * e.level;
+		e.time = -255;
+	}
+	if (e.h == 1) {
+		sx = (int)(e.x - 1);
+		sy = (int)(e.y - 0.5);
+		road[sy][sx] -= 0x0100;
+		road[sy][sx + 1] -= 0x0001;
+	}
+	else if (e.h == 0) {
+		sx = (int)(e.x - 0.5);
+		sy = (int)(e.y - 1);
+		road[sy][sx] -= 0x0010;
+		road[sy + 1][sx] -= 0x1000;
+	}
 
 }
-void Delivery(SDL_Renderer* renderer, WindowData fullViewport, EventData e) {
+void CarAccidentRender(SDL_Renderer* renderer, WindowData& fullViewport, EventData& e, ImageData cloud_pic[]) {
+	int width = fullViewport.w, height = fullViewport.h, hnum = fullViewport.hnum - 1, wnum = fullViewport.wnum - 1;
+	if (e.time < -255)
+		imgRender(renderer, cloud_pic[0], Middle, e.x * (width - height / 12) / (wnum + 1), e.y * (height - height / 12) / (hnum + 1) + height / 12, fmin((width - height / 12) / (wnum + 1) * 8 / 10, (height - height / 12) / (hnum + 1) * 4 / 6 * cloud_pic[0].width / cloud_pic[0].height), NULL, 1, NULL, NULL, 0, no, -e.time - 255);
+	else
+		imgRender(renderer, cloud_pic[1], Middle, e.x * (width - height / 12) / (wnum + 1), e.y * (height - height / 12) / (hnum + 1) + height / 12, fmin((width - height / 12) / (wnum + 1) * 8 / 10, (height - height / 12) / (hnum + 1) * 4 / 6 * cloud_pic[1].width / cloud_pic[1].height), NULL, 1, NULL, NULL, 0, no, -e.time);
 
 }
-void Thief(SDL_Renderer* renderer, WindowData fullViewport, EventData e) {
+
+void RoadClosure(EventData& e, ValueData& value) {
+	int sx, sy;
+	if (e.time <= 18 - (e.level)) {
+		value.love += 20 + e.level * e.level * 5;
+		e.time = -510;
+	}
+	else {
+		value.love -= 25 * e.level * e.level;
+		value.money -= 100 + 5 * e.level * e.level;
+		e.time = -255;
+	}
+	if (e.h == 1) {
+		sx = (int)(e.x - 1);
+		sy = (int)(e.y - 0.5);
+		road[sy][sx] -= 0x0100;
+		road[sy][sx + 1] -= 0x0001;
+	}
+	else if (e.h == 0) {
+		sx = (int)(e.x - 0.5);
+		sy = (int)(e.y - 1);
+		road[sy][sx] -= 0x0010;
+		road[sy + 1][sx] -= 0x1000;
+	}
 
 }
-void Lightening(SDL_Renderer* renderer, WindowData fullViewport, EventData e) {
+void RoadClosureRender(SDL_Renderer* renderer, WindowData& fullViewport, EventData& e, ImageData cloud_pic[]) {
+	int width = fullViewport.w, height = fullViewport.h, hnum = fullViewport.hnum - 1, wnum = fullViewport.wnum - 1;
+	if (e.time < -255)
+		imgRender(renderer, cloud_pic[0], Middle, e.x * (width - height / 12) / (wnum + 1), e.y * (height - height / 12) / (hnum + 1) + height / 12, fmin((width - height / 12) / (wnum + 1) * 8 / 10, (height - height / 12) / (hnum + 1) * 4 / 6 * cloud_pic[0].width / cloud_pic[0].height), NULL, 1, NULL, NULL, 0, no, -e.time - 255);
+	else
+		imgRender(renderer, cloud_pic[1], Middle, e.x * (width - height / 12) / (wnum + 1), e.y * (height - height / 12) / (hnum + 1) + height / 12, fmin((width - height / 12) / (wnum + 1) * 8 / 10, (height - height / 12) / (hnum + 1) * 4 / 6 * cloud_pic[1].width / cloud_pic[1].height), NULL, 1, NULL, NULL, 0, no, -e.time);
 
 }
-*/
+void Delivery(EventData& e, ValueData& value) {
+	if (e.time <= 25 - (e.level)) {
+		value.love += 20 + e.level * e.level * 5;
+		value.money += 10 * e.level * e.level;
+		e.time = -510;
+	}
+	else {
+		value.love -= 25 * e.level * e.level;
+		value.money -= 150 + 5 * e.level * e.level;
+		e.time = -255;
+	}
+}
+void DeliveryRender(SDL_Renderer* renderer, WindowData& fullViewport, EventData& e, ImageData cloud_pic[]) {
+	int width = fullViewport.w, height = fullViewport.h, hnum = fullViewport.hnum - 1, wnum = fullViewport.wnum - 1;
+	if (e.time < -255)
+		imgRender(renderer, cloud_pic[0], Middle, e.x * (width - height / 12) / (wnum + 1), e.y * (height - height / 12) / (hnum + 1) + height / 12, fmin((width - height / 12) / (wnum + 1) * 8 / 10, (height - height / 12) / (hnum + 1) * 4 / 6 * cloud_pic[0].width / cloud_pic[0].height), NULL, 1, NULL, NULL, 0, no, -e.time - 255);
+	else
+		imgRender(renderer, cloud_pic[1], Middle, e.x * (width - height / 12) / (wnum + 1), e.y * (height - height / 12) / (hnum + 1) + height / 12, fmin((width - height / 12) / (wnum + 1) * 8 / 10, (height - height / 12) / (hnum + 1) * 4 / 6 * cloud_pic[1].width / cloud_pic[1].height), NULL, 1, NULL, NULL, 0, no, -e.time);
+
+}
+void Thief(EventData& e, ValueData& value) {
+	if (e.time <= 16 - (e.level)) {
+		value.love += 20 + e.level * e.level * 5;
+		e.time = -510;
+	}
+	else {
+		value.love -= 25 * e.level * e.level;
+		value.money -= 150 + 5 * e.level * e.level;
+		e.time = -255;
+	}
+}
+void ThiefRender(SDL_Renderer* renderer, WindowData& fullViewport, EventData& e, ImageData cloud_pic[]) {
+	int width = fullViewport.w, height = fullViewport.h, hnum = fullViewport.hnum - 1, wnum = fullViewport.wnum - 1;
+	if (e.time < -255)
+		imgRender(renderer, cloud_pic[0], Middle, e.x * (width - height / 12) / (wnum + 1), e.y * (height - height / 12) / (hnum + 1) + height / 12, fmin((width - height / 12) / (wnum + 1) * 8 / 10, (height - height / 12) / (hnum + 1) * 4 / 6 * cloud_pic[0].width / cloud_pic[0].height), NULL, 1, NULL, NULL, 0, no, -e.time - 255);
+	else
+		imgRender(renderer, cloud_pic[1], Middle, e.x * (width - height / 12) / (wnum + 1), e.y * (height - height / 12) / (hnum + 1) + height / 12, fmin((width - height / 12) / (wnum + 1) * 8 / 10, (height - height / 12) / (hnum + 1) * 4 / 6 * cloud_pic[1].width / cloud_pic[1].height), NULL, 1, NULL, NULL, 0, no, -e.time);
+
+}
+
+void Lightening(EventData& e, ValueData& value) {
+	if (e.time <= 16 - (e.level)) {
+		value.love += 20 + e.level * e.level * 5;
+		e.time = -510;
+	}
+	else {
+		value.love -= 25 * e.level * e.level;
+		value.population -= e.level;
+		value.money -= 50 + 5 * e.level * e.level;
+		e.time = -255;
+	}
+}
+void LighteningRender(SDL_Renderer* renderer, WindowData& fullViewport, EventData& e, ImageData cloud_pic[]) {
+	int width = fullViewport.w, height = fullViewport.h, hnum = fullViewport.hnum - 1, wnum = fullViewport.wnum - 1;
+	if (e.time<-255)
+		imgRender(renderer, cloud_pic[0], Middle, e.x * (width - height / 12) / (wnum + 1), e.y * (height - height / 12) / (hnum + 1) + height / 12, fmin((width - height / 12) / (wnum + 1) * 8 / 10, (height - height / 12) / (hnum + 1) * 4 / 6 * cloud_pic[0].width / cloud_pic[0].height), NULL, 1, NULL, NULL, 0, no, -e.time-255);
+	else
+		imgRender(renderer, cloud_pic[1], Middle, e.x* (width - height / 12) / (wnum + 1), e.y* (height - height / 12) / (hnum + 1)+height/12, fmin((width - height / 12) / (wnum + 1) * 8 / 10, (height - height / 12) / (hnum + 1) * 4 / 6 * cloud_pic[1].width / cloud_pic[1].height), NULL, 1, NULL, NULL, 0, no, -e.time);
+}
+
 Uint32 event_change(Uint32 interval, void* param)
 {
 	EventData* t = (EventData*)param;
-	//void (*f[6])(SDL_Renderer*, WindowData, EventData) = {Fire,CarAccident,RoadClosure,Delivery,Thief,Lightening};
 	if (t->exist == false) {
+		if (t->time < 0)
+			t->time += 5;
+		if (t->time == -255)
+			t->time = 0;
 		return interval;
 	}
 	else {
-		/*if () {
-			t->exist = false;
-			(*f[t->type])(renderer,fullViewport,e);
-		}*/
 		t->time++;
-	//	printf("t=%d\n", t->time);
+		//這個是我的方式(可以用type去做細部分類，但就交給你了)
+		t->value->money -= t->time/500;
+		t->value->love -= t->time/800;
+		t->value->population -= t->time/1000;
 		return interval;
 	}
 }
-void eventRender(SDL_Renderer* renderer, WindowData fullViewport, EventData& e) {
-	int width = fullViewport.w, height = fullViewport.h, hnum = fullViewport.hnum - 1, wnum = fullViewport.wnum - 1;
+
+void eventRender(SDL_Renderer* renderer, WindowData& fullViewport, EventData& e, CarData car[], ImageData cloud_pic[], Building **build, ValueData &value) {
+	int width = fullViewport.w, height = fullViewport.h, hnum = fullViewport.hnum, wnum = fullViewport.wnum;
+	void (*f1[6])(SDL_Renderer *,WindowData&, EventData&, ImageData*) = { FireRender,CarAccidentRender,RoadClosureRender,DeliveryRender,ThiefRender,LighteningRender};
+	void (*f2[6])(EventData&, ValueData&) = { Fire,CarAccident,RoadClosure,Delivery,Thief,Lightening };
 	if (e.exist == false) {
+		if(e.time<0)
+			(*f1[e.type])(renderer, fullViewport, e, cloud_pic);
+		else
+			createEvent(e, fullViewport, e.img, build, &value, car);
 		return;
 	}
 	else {
+		for (int i = 0; i < CARNUM; i++) {
+			if (car[i].velocity < -1 && ((fabs(car[i].home_y - e.y) + fabs(car[i].home_x - e.x)) < 1e-1)) {
+				car[i].velocity = -1;
+				//0:fire	1 : car accident	2 : road closure	3 : delivery	4 : thief	5 : lightening
+				switch (e.type) {
+				case 0:
+					if (build[(int)(e.y - 1)][(int)(e.x - 1)].type == Factory) {
+						if (car[i].type != 2)
+							continue;
+					}
+					else {
+						if (car[i].type != 1 && car[i].type != 2)
+							continue;
+					}
+					break;
+				case 1:
+				case 2:
+				case 4:
+					if (car[i].type != 4)
+						continue;
+					break;
+				case 3:
+					if (car[i].type != 3)
+						continue;
+					break;
+				case 5:
+					if (car[i].type != 1 && car[i].type != 2)
+						continue;
+					break;
+				}
+				e.exist = false;
+				/*這個是你的方式
+				(*f2[e.type])(e, value);
+				*/
+				//這個是我的方式(可以用type去做細部分類，但就交給你了)
+				e.value->money += 100;
+				e.value->love += 200;
+				e.value->population += 20;
+
+				break;
+			}
+		}
 		if (e.img != NULL)
-			imgRender(renderer, *e.img, Middle, e.x, e.y, fmin((width - height / 12) / (wnum + 1) * 8 / 10, (height - height / 12) / (hnum + 1) * 4 / 6 * (*e.img).width / (*e.img).height), (height - height / 12) / (hnum + 1) * 4 / 6, 1, NULL, NULL, 0, no, 255);
+			if(e.type==1||e.type==2)
+				imgRender(renderer, e.img[e.type], Middle, e.x * (width - height / 12) / wnum, e.y * (height - height / 12) / hnum + height / 12, fmin((width - height / 12) / wnum / 4, (height - height / 12) / hnum /2 * e.img[e.type].width / e.img[e.type].height), NULL, 1, NULL, NULL, 0, no, 255);
+			else
+				imgRender(renderer, e.img[e.type], Middle, e.x * (width - height / 12) / wnum, e.y * (height - height / 12) / hnum + height / 12, fmin((width - height / 12) / wnum * 4 / 5, (height - height / 12) / hnum * 2/ 3 * e.img[e.type].width / e.img[e.type].height), NULL, 1, NULL, NULL, 0, no, 255);
 	}
 }

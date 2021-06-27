@@ -1,8 +1,17 @@
 Uint32 clock_add(Uint32 interval, void* param)
 {
-	int* t = (int*)param;
+	ValueData* value = (ValueData*)param;
 	//Return 0 when 1 day has past
-	(*t) = ((*t) + 1 )% (60*60 * 24);
+	value->time = ((value->time) + 1 )% (60*60 * 24);
+	if (value->time % (66 + 36 * 3 * value->level * 15 / value->population) == 0) {
+		value->money += 5 * value->level;
+	}
+	if ((value->time % (1600 + 600 * 3 * value->level * 15 / value->population) == 0) && (value->love <= 100 * value->level)) {
+		value->love += 10 * value->level;
+	}
+	if ((value->time % 3600 == 0) && (value->population < value->level * 35 * 6))
+		value->population *= 2;
+
 	return interval;
 }
 
@@ -143,15 +152,3 @@ Uint32 incident_add(Uint32 interval, void* param)
 	}
 }
 
-void value_change(ValueData &value)
-{
-	if (value.time % (66 + 36 * 3 * value.level * 15 / value.population) == 0) {
-		value.money += 5 * value.level;
-	}
-	if ((value.time % (1600 + 600 * 3 * value.level * 15 / value.population) == 0) && (value.love <= 100 * value.level)) {
-		value.love += 10 * value.level;
-	}
-	if ((value.time % 3600 == 0) && (value.population < value.level * 35 * 6))
-		value.population *= 2;
-
-}

@@ -60,8 +60,8 @@ struct CarData
 	unsigned int length : 6;
 	unsigned int angle : 9;
 	unsigned int type : 3; //0:no car, 1:fire truck, 2:bubble truck, 3:truck, 4:police car, 5:car, 6: car1, 7:car2
-	unsigned int home_xnum : 4;
-	unsigned int home_ynum : 4;
+	double home_x;
+	double home_y;
 	double velocity;  //-1:no car
 	bool intersect;
 };
@@ -74,6 +74,20 @@ struct ValueData
 	int population;
 	int love;
 	int money;
+};
+
+struct EventData {
+	int season;	//	0:spring	1:summer	2:fall	3:winter
+	int level;
+	ValueData* value;
+	double x, y;
+	bool exist;
+	int type;	//	0:fire	1:car accident	2:road closure	3:delivery	4:thief	5:lightening	6:no event
+	ImageData* img;
+	int time; //time start from the event created
+	int h;//horizontal
+	CarData* car;
+	WindowData fullViewport;
 };
 
 const int SOLID = 100;

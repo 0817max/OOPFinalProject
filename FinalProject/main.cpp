@@ -66,7 +66,6 @@ int main(int argc, char* args[])
 	ImageData car_pic[7];
 	for (int i = 0; i < 7; i++)
 		car_pic[i] = loadImgTexture(renderer, car_pic_path[i], 1, 1, 1);
-	ImageData fire = loadImgTexture(renderer, (char*)"../images/fire.png", 1, 1, 1);
 	ImageData cloud_pic[2];
 	cloud_pic[0] = loadImgTexture(renderer, (char*)"../images/white_cloud.png", 1, 1, 1);
 	cloud_pic[1] = loadImgTexture(renderer, (char*)"../images/dark_cloud.png", 1, 1, 1);
@@ -91,13 +90,13 @@ int main(int argc, char* args[])
 	}
 
 	EventData event;
-	createEvent(event, fullViewport, event_pic, build, &value);
+	createEvent(event, fullViewport, event_pic, build, &value, car);
 
-	SDL_TimerID timerID_clock = SDL_AddTimer(10, clock_add, &(value.time));
+	SDL_TimerID timerID_clock = SDL_AddTimer(10, clock_add, &value);
 	SDL_TimerID timerID_incident;
 	SDL_TimerID timerID_car = SDL_AddTimer(10, car_move, car);
-	SDL_TimerID timerID_event = SDL_AddTimer(1000, event_change, &event);
-	
+	SDL_TimerID timerID_event = SDL_AddTimer(30, event_change, &event);
+
 	//While application is running
 	while (!quit)
 	{
@@ -110,8 +109,6 @@ int main(int argc, char* args[])
 			fullViewport.oldh = fullViewport.h;
 			windowChange = false;
 		}
-		
-		value_change(value);
 
 		mouseState = NONE; //Handle events on queue
 		while (SDL_PollEvent(&e) != 0)
@@ -134,12 +131,12 @@ int main(int argc, char* args[])
 		mapRender(renderer, fullViewport, road_pic, road_pic1); 
 		controlRender(renderer, fullViewport, windowChange, value, control_pic, build_pic, flag_pic);
 		buildRender(renderer, fullViewport, build, build_pic);
-		eventRender(renderer, fullViewport, event);
+		eventRender(renderer, fullViewport, event, car, cloud_pic, build, value);
 		carRender(renderer, fullViewport, car, car_pic, cloud_pic);
 		incident(renderer, fullViewport, windowChange, inci, inci_alpha);
 		
 		//add things
-		next_inci = addCar(renderer, fullViewport, mouseState, mouseX, mouseY, build, car, car_pic);
+		next_inci = addCar(renderer, fullViewport, mouseState, mouseX, mouseY, event,build, car, car_pic);
 		next_inci += addBuild(renderer, fullViewport, mouseState, mouseX, mouseY, build, build_pic, car);
 		if (next_inci||inci) {
 			if (next_inci) {

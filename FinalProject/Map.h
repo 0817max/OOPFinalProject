@@ -327,7 +327,7 @@ void destroyRoad(int** road, int hnum, int wnum) {
 
 int checkIntersect(const WindowData& fullViewport, int **road, double y, double x) {
 	int width = fullViewport.w, height = fullViewport.h, wnum = fullViewport.wnum, hnum = fullViewport.hnum;
-	if (x < 0.5 || y < 0.5 || x>wnum - 0.5 || y>hnum - 0.5)
+	if (x < 0.49 || y < 0.49 || x>wnum - 0.49 || y>hnum - 0.49)
 		return 1;
 	else {
 		double x_remain, y_remain;

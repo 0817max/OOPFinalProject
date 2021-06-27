@@ -14,11 +14,11 @@ int initCar(WindowData* fullViewport, CarData car[], Building **build) {
 	bool repeat = false;
 	int count = 0;
 	for (int i = 0; i < CARNUM; i++) {
-		car[i].x = car[i].y = 0.5;
+		car[i].x = car[i].y = 0;
 		car[i].window = fullViewport;
 		car[i].path = NULL;
 		car[i].i = car[i].length = car[i].angle = car[i].type = 0;
-		car[i].home_xnum = car[i].home_ynum = 0;
+		car[i].home_x = car[i].home_y = 0;
 		car[i].velocity = -1;
 		car[i].intersect = false;
 	}
@@ -28,20 +28,20 @@ int initCar(WindowData* fullViewport, CarData car[], Building **build) {
 				car[0].type = 1;
 				car[1].type = 2;
 				car[0].velocity = car[1].velocity = -1;
-				car[0].home_xnum = car[1].home_xnum = x;
-				car[0].home_ynum = car[1].home_ynum = y;
+				car[0].home_x = car[1].home_x = x+1;
+				car[0].home_y = car[1].home_y = y+1;
 			}
 			else if (build[y][x].type == Logistics) {
 				car[2].type = 3;
 				car[2].velocity = -1;
-				car[2].home_xnum = x;
-				car[2].home_ynum = y;
+				car[2].home_x = x+1;
+				car[2].home_y = y+1;
 			}
 			else if (build[y][x].type == PoliceOff) {
 				car[3].type = 4;
 				car[3].velocity = -1;
-				car[3].home_xnum = x;
-				car[3].home_ynum = y;
+				car[3].home_x = x+1;
+				car[3].home_y = y+1;
 			}
 	for (int i = 0; i < INITAILlRANDOMCARNUM; i++) {
 		//printf("%d\n", i);
@@ -61,7 +61,7 @@ int initCar(WindowData* fullViewport, CarData car[], Building **build) {
 		} while (repeat);
 	}
 	for (int i = 0; i < INITAILlRANDOMCARNUM; i++)
-		createRandomCar(car[i + 4], *fullViewport, start[i]);
+		createRandomCar(car[CARNUM-INITAILlRANDOMCARNUM+i], *fullViewport, start[i]);
 	delete[]start;
 	return 0;
 }

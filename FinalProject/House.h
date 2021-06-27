@@ -1,4 +1,3 @@
-
 void createBuilding(Building **&build, const WindowData& fullViewport, int** road) {
 	int width = fullViewport.w, height = fullViewport.h;
 	int hnum = fullViewport.hnum - 1, wnum = fullViewport.wnum - 1;
@@ -63,8 +62,8 @@ int addBuild(SDL_Renderer* renderer, const WindowData& fullViewport, const Mouse
 								if (car[i].type > 4 || car[i].type == 0) {
 									car[i].velocity = -3;
 									car[i].type = c + 1;
-									car[i].home_xnum = xnum;
-									car[i].home_ynum = ynum;
+									car[i].home_x = xnum+1;
+									car[i].home_y = ynum+1;
 									c++;
 								}
 								i++;
@@ -78,8 +77,8 @@ int addBuild(SDL_Renderer* renderer, const WindowData& fullViewport, const Mouse
 							if (i < CARNUM) {
 								car[i].velocity = -3;
 								car[i].type = 3;
-								car[i].home_xnum = xnum;
-								car[i].home_ynum = ynum;
+								car[i].home_x = xnum+1;
+								car[i].home_y = ynum+1;
 							}
 						}
 						else if (choose==PoliceOff){
@@ -90,8 +89,8 @@ int addBuild(SDL_Renderer* renderer, const WindowData& fullViewport, const Mouse
 							if (i < CARNUM) {
 								car[i].velocity = -3;
 								car[i].type = 4;
-								car[i].home_xnum = xnum;
-								car[i].home_ynum = ynum;
+								car[i].home_x = xnum+1;
+								car[i].home_y = ynum+1;
 							}
 						}
 					}
