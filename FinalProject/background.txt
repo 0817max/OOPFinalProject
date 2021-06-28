@@ -1,0 +1,37 @@
+Background
+	Welcome to your city!
+	Here, you are the leader of this city.
+	You can build more house and assign work to finish the mission.
+	Try your best to make your city prosperous!
+
+Introduction
+	I.Resource:
+		Population:
+			
+		Money:
+			
+		Happiness:
+			
+	II.House:
+		A.
+			
+		B.
+			
+		C.
+			
+		D.
+			
+		E.
+			
+	III.Mission System:
+		Event:
+			A.
+				
+			B.
+				
+			C.
+				
+			D.
+				
+			E.
+				

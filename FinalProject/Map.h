@@ -7,7 +7,6 @@
 	{0x0000,0x1010,0x0000,0x0100,0x0111,0x1001,0x0000,0x1010},
 	{0x0000,0x1000,0x0100,0x0101,0x1001,0x0100,0x0101,0x1001}
 };*/
-#define RoadLength 45
 
 int** road=NULL;
 
@@ -158,11 +157,12 @@ int randomDirection(WindowData& fullViewport, int x, int y, int pastDirection) {
 void createRandomMap(WindowData& fullViewport, int** &road, int length) {
 	int wnum = fullViewport.wnum, hnum = fullViewport.hnum;
 	//If there is map, clear all
-	if (road) {
+	if (length==0) {
 		for (int i = 0; i < hnum; i++)
 			delete[]road[i];
 		delete[]road;
 		road = NULL;
+		return;
 	}
 	road = new int* [hnum];
 	for (int i = 0; i < hnum; i++) {
@@ -220,7 +220,7 @@ void mapRender(SDL_Renderer* renderer, WindowData& fullViewport, ImageData& road
 	//draw horizontal road
 	for (int i = 0; i < hnum; i++) {
 		for (int j = 0; j < wnum - 1; j++) {
-			if (((road[i][j] >> 8) % 2) * (road[i][j + 1] % 2))
+			if (((road[i][j] >> 8) % 4) * (road[i][j + 1] % 4))
 				imgRender(renderer, road_pic,  Middle, (double)(width-height/12)/ wnum * (j + 1), height / 12 + (double)(height - height / 12) / hnum * (i + 0.5) , (width - height / 12) / wnum, (height - height / 12) / hnum/3.,1,NULL, NULL, 0, no, 255);
 		}
 	}
@@ -228,7 +228,7 @@ void mapRender(SDL_Renderer* renderer, WindowData& fullViewport, ImageData& road
 	//draw vertical road
 	for (int j = 0; j < wnum; j++) {
 		for (int i = 0; i < hnum - 1; i++) {
-			if (((road[i][j] >> 4) % 2) * ((road[i + 1][j] >> 12) % 2))
+			if (((road[i][j] >> 4) % 4) * ((road[i + 1][j] >> 12) % 4))
 				imgRender(renderer, road_pic1,  Middle, (double)(width - height / 12) / wnum * (j + 0.5), height / 12 + (double)(height - height / 12) / hnum * (i + 1) , (width - height / 12) / wnum /5., (height - height / 12) / hnum, 1,NULL, NULL, 0, no, 255);
 		}
 	}
@@ -240,37 +240,37 @@ void mapRender(SDL_Renderer* renderer, WindowData& fullViewport, ImageData& road
 			if (i == 0)
 				//Left
 				if (j == 0) {
-					if (((road[i][j] >> 8) % 2) & ((road[i][j] >> 4) % 2))
+					if (((road[i][j] >> 8) % 4) && ((road[i][j] >> 4) % 4))
 						boxColor(renderer, (double)(width - height / 12) / wnum * (j + 0.5-1./10), height / 12 + (double)(height - height / 12) / hnum * (i + 0.5-1./6) , (double)(width - height / 12) / wnum * (j + 0.5+1./10), height / 12 + (double)(height - height / 12) / hnum * (i + 0.5+1./6), 0xFF4C4C4C);
 				}
 				//Right
 				else if (j == wnum - 1) {
-					if (((road[i][j] >> 4) % 2) & (road[i][j] % 2))
+					if (((road[i][j] >> 4) % 4) && (road[i][j] % 4))
 						boxColor(renderer, (double)(width - height / 12) / wnum * (j + 0.5 - 1. / 10), height / 12 + (double)(height - height / 12) / hnum * (i + 0.5 - 1. / 6), (double)(width - height / 12) / wnum * (j + 0.5 + 1. / 10), height / 12 + (double)(height - height / 12) / hnum * (i + 0.5 + 1. / 6), 0xFF4C4C4C);
 				}
 				else {
-					if ((((road[i][j] >> 8) % 2) + ((road[i][j] >> 4) % 2) + (road[i][j] % 2)) >= 2)	
+					if ((((road[i][j] >> 8) % 4) + ((road[i][j] >> 4) % 4) + (road[i][j] % 4)) >= 2)	
 						boxColor(renderer, (double)(width - height / 12) / wnum * (j + 0.5 - 1. / 10), height / 12 + (double)(height - height / 12) / hnum * (i + 0.5 - 1. / 6), (double)(width - height / 12) / wnum * (j + 0.5 + 1. / 10), height / 12 + (double)(height - height / 12) / hnum * (i + 0.5 + 1. / 6), 0xFF4C4C4C);
 				}
 			//bottom
 			else if (i == hnum - 1)
 				//Left
 				if (j == 0) {
-					if (((road[i][j] >> 12) % 2) & ((road[i][j] >> 8) % 2))
+					if (((road[i][j] >> 12) % 4) * ((road[i][j] >> 8) % 4))
 						boxColor(renderer, (double)(width - height / 12) / wnum * (j + 0.5 - 1. / 10), height / 12 + (double)(height - height / 12) / hnum * (i + 0.5 - 1. / 6), (double)(width - height / 12) / wnum * (j + 0.5 + 1. / 10), height / 12 + (double)(height - height / 12) / hnum * (i + 0.5 + 1. / 6), 0xFF4C4C4C);
 				}
 				//Right
 				else if (j == wnum - 1) {
-					if (((road[i][j] >> 12) % 2) & (road[i][j] % 2))
+					if (((road[i][j] >> 12) % 4) * (road[i][j] % 4))
 						boxColor(renderer, (double)(width - height / 12) / wnum * (j + 0.5 - 1. / 10), height / 12 + (double)(height - height / 12) / hnum * (i + 0.5 - 1. / 6), (double)(width - height / 12) / wnum * (j + 0.5 + 1. / 10), height / 12 + (double)(height - height / 12) / hnum * (i + 0.5 + 1. / 6), 0xFF4C4C4C);
 				}
 				else {
-					if ((((road[i][j] >> 12) % 2) + ((road[i][j] >> 8) % 2) + (road[i][j] % 2)) >= 2)
+					if ((((road[i][j] >> 12) % 4) + ((road[i][j] >> 8) % 4) + (road[i][j] % 4)) >= 2)
 						boxColor(renderer, (double)(width - height / 12) / wnum * (j + 0.5 - 1. / 10), height / 12 + (double)(height - height / 12) / hnum * (i + 0.5 - 1. / 6), (double)(width - height / 12) / wnum * (j + 0.5 + 1. / 10), height / 12 + (double)(height - height / 12) / hnum * (i + 0.5 + 1. / 6), 0xFF4C4C4C);
 				}
 			//Other place
 			else {
-				if ((((road[i][j] >> 12) % 2) + ((road[i][j] >> 8) % 2) + ((road[i][j] >> 4) % 2) + (road[i][j] % 2)) >= 2)
+				if ((((road[i][j] >> 12) % 4) + ((road[i][j] >> 8) % 4) + ((road[i][j] >> 4) % 4) + (road[i][j] % 4)) >= 2)
 					boxColor(renderer, (double)(width - height / 12) / wnum * (j + 0.5 - 1. / 10), height / 12 + (double)(height - height / 12) / hnum * (i + 0.5 - 1. / 6), (double)(width - height / 12) / wnum * (j + 0.5 + 1. / 10), height / 12 + (double)(height - height / 12) / hnum * (i + 0.5 + 1. / 6), 0xFF4C4C4C);
 			}
 }

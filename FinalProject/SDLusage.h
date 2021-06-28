@@ -38,6 +38,11 @@ enum MouseState
 	IN_LB_PR_HOVER = 11 // Inside, Left Button, Press, Hover
 };
 
+struct Mouse {
+	MouseState state;
+	int X, Y;
+};
+
 enum PosPoint {
 	LeftTop ,Top, RightTop,
 	Left, Middle, Right, 
@@ -471,19 +476,19 @@ void mouseHandleEvent(SDL_Event* e, MouseState* mouseState, int* x, int* y)
 					{
 						*mouseState = IN_RB_PR;
 					}
-					else if (e->button.button == SDL_BUTTON_LEFT && e->button.clicks == 2 && timediv < 100)
+					else if (e->button.button == SDL_BUTTON_LEFT && e->button.clicks == 2 && timediv < 80)
 					{
 						*mouseState = IN_LB_DC;
 					}
-					else if (e->button.button == SDL_BUTTON_RIGHT && e->button.clicks == 2 && timediv < 100)
+					else if (e->button.button == SDL_BUTTON_RIGHT && e->button.clicks == 2 && timediv < 80)
 					{
 						*mouseState = IN_RB_DC;
 					}
-					else if (e->button.button == SDL_BUTTON_LEFT && e->button.clicks == 1 && timediv < 800 && timediv > 50)
+					else if (e->button.button == SDL_BUTTON_LEFT && e->button.clicks == 1 && timediv < 900 && timediv > 50)
 					{
 						*mouseState = IN_LB_SC;
 					}
-					else if (e->button.button == SDL_BUTTON_RIGHT && e->button.clicks == 1 && timediv < 800 && timediv > 50)
+					else if (e->button.button == SDL_BUTTON_RIGHT && e->button.clicks == 1 && timediv < 900 && timediv > 50)
 					{
 						*mouseState = IN_RB_SC;
 					}
@@ -502,11 +507,11 @@ void mouseHandleEvent(SDL_Event* e, MouseState* mouseState, int* x, int* y)
 					{
 						*mouseState = IN_RB_PR;
 					}
-					else if (e->button.button == SDL_BUTTON_LEFT && e->button.clicks == 2 && timediv < 100)
+					else if (e->button.button == SDL_BUTTON_LEFT && e->button.clicks == 2 && timediv < 80)
 					{
 						*mouseState = IN_LB_DC;
 					}
-					else if (e->button.button == SDL_BUTTON_RIGHT && e->button.clicks == 2 && timediv < 100)
+					else if (e->button.button == SDL_BUTTON_RIGHT && e->button.clicks == 2 && timediv < 80)
 					{
 						*mouseState = IN_RB_DC;
 					}

@@ -1,10 +1,10 @@
-void createBuilding(Building **&build, const WindowData& fullViewport, int** road) {
+void createBuilding(Building **&build, const WindowData& fullViewport, int** road, int num) {
 	int width = fullViewport.w, height = fullViewport.h;
 	int hnum = fullViewport.hnum - 1, wnum = fullViewport.wnum - 1;
 	int i, j;
 
 	//If there are buildings, clear all
-	if (build) {
+	if (num==0) {
 		for (i = 0; i < hnum; i++)
 			delete[]build[i];
 		delete[]build;
@@ -34,26 +34,38 @@ void createBuilding(Building **&build, const WindowData& fullViewport, int** roa
 				build[i][j].type = (c%2)?House1:House2;
 			c++;
 		}
-	} while (c < 20);
+	} while (c < num);
 }
 
-int addBuild(SDL_Renderer* renderer, const WindowData& fullViewport, const MouseState& mouseState, const int mousex, const int mousey, Building** build, ImageData build_pic[], CarData car[]) {
+int addBuild(SDL_Renderer* renderer, const WindowData& fullViewport, const Mouse& mouse, int& money, Building** build, ImageData build_pic[], CarData car[]) {
 	int width = fullViewport.w, height = fullViewport.h, wnum=fullViewport.wnum, hnum=fullViewport.hnum, xnum, ynum;
 	static int choose = 0;
 	static SDL_TimerID timerID_clock;
 	
 	//Left Click
-	if (mouseState == IN_LB_SC) {
+	if (mouse.state == IN_LB_SC) {
 
 		//If choose, put down the building
 		if (choose) {
-			if (mousex > (width-height/12) / wnum / 2 && mousex<(width -height/12- (width - height / 12) / wnum / 2) && mousey >(height / 12 + ((height - height / 12) / hnum) / 2) && mousey < (height - ((height - height / 12) / hnum) / 2)){
-				xnum = (mousex- (width - height / 12) / wnum / 2) / ((width-height/12) / wnum);
-				ynum = (mousey - height / 12 - (height - height / 12) / hnum / 2) / ((height - height / 12 ) / hnum);
+			if (mouse.X > (width-height/12) / wnum / 2 && mouse.X<(width -height/12- (width - height / 12) / wnum / 2) && mouse.Y >(height / 12 + ((height - height / 12) / hnum) / 2) && mouse.Y < (height - ((height - height / 12) / hnum) / 2)){
+				xnum = (mouse.X- (width - height / 12) / wnum / 2) / ((width-height/12) / wnum);
+				ynum = (mouse.Y- height / 12 - (height - height / 12) / hnum / 2) / ((height - height / 12 ) / hnum);
 				
 				//Check for Empty building and having road
 				if (build[ynum][xnum].type == Empty) {
 					if (checkRoad(ynum, xnum)) {
+						if (choose && choose <= 7) {
+							if (money < 200)
+								return 5;
+							else
+								money -= 200;
+						}
+						else {
+							if (money < 150)
+								return 5;
+							else
+								money -= 150;
+						}
 						build[ynum][xnum].type = (BuildType)choose;
 						//adding more special car
 						if (choose == FireSta) {
@@ -64,6 +76,7 @@ int addBuild(SDL_Renderer* renderer, const WindowData& fullViewport, const Mouse
 									car[i].type = c + 1;
 									car[i].home_x = xnum+1;
 									car[i].home_y = ynum+1;
+									car[i].x = car[i].y = 0;
 									c++;
 								}
 								i++;
@@ -79,6 +92,7 @@ int addBuild(SDL_Renderer* renderer, const WindowData& fullViewport, const Mouse
 								car[i].type = 3;
 								car[i].home_x = xnum+1;
 								car[i].home_y = ynum+1;
+								car[i].x = car[i].y = 0;
 							}
 						}
 						else if (choose==PoliceOff){
@@ -91,6 +105,7 @@ int addBuild(SDL_Renderer* renderer, const WindowData& fullViewport, const Mouse
 								car[i].type = 4;
 								car[i].home_x = xnum+1;
 								car[i].home_y = ynum+1;
+								car[i].x = car[i].y = 0;
 							}
 						}
 					}
@@ -103,49 +118,59 @@ int addBuild(SDL_Renderer* renderer, const WindowData& fullViewport, const Mouse
 		}
 
 		//Choosing which building would be built
-		else if (mousex >= (width-height/12) && mousey >= (height/ 12)&&mousey<=(height*10/12)) {
-			choose = mousey / (height / 12);
+		else if (mouse.X >= (width-height/12) && mouse.Y >= (height/ 12)&&mouse.Y<=(height*10/12)) {
+			choose = mouse.Y / (height / 12);
 			if (choose == 10)
 				choose = 0;
 		}
 	}
 	
 	//Right Click for releasing building
-	else if (mouseState == IN_RB_SC) {
+	else if (mouse.state == IN_RB_SC) {
 		choose = 0;
 	}
 
 	//Fixed chosen building on mouse
 	else {
-		switch(choose) {
+		if (mouse.X >= (width -height / 12) && mouse.Y >= (height / 12.) && mouse.Y < (height * 10. / 12)) {
+			boxColor(renderer, width - height / 12+ height / 1000 + 1, (mouse.Y / (height / 12)) * height / 12+ height / 1000 + 1, width, (mouse.Y / (height / 12) + 1) * height / 12- height / 1000 - 1, 0x22FFFFFF);
+		}
+		else if (choose) {
+			if (mouse.X > (width - height / 12) / wnum / 2 && mouse.X<(width - height / 12 - (width - height / 12) / wnum / 2) && mouse.Y >(height / 12 + ((height - height / 12) / hnum) / 2) && mouse.Y < (height - ((height - height / 12) / hnum) / 2)) {
+				xnum = (mouse.X - (width - height / 12) / wnum / 2) / ((width - height / 12) / wnum);
+				ynum = (mouse.Y - height / 12 - (height - height / 12) / hnum / 2) / ((height - height / 12) / hnum);
+				boxColor(renderer, (double)(width - height / 12) / wnum*(0.5+xnum+1/10.), height / 12+ ((double)(height - height / 12) / hnum)*(ynum+0.5+1/6.), (double)(width - height / 12) / wnum * (1.5 + xnum-1/10.), height / 12 + ((double)(height - height / 12) / hnum) * (ynum + 1.5-1/6.),0x22FFFFFF);
+			}
+			switch (choose) {
 			case 1:
-				imgRender(renderer, build_pic[4], Middle, mousex, mousey, NULL, height / 12, 1, NULL, NULL, 0, no, 100);
+				imgRender(renderer, build_pic[4], Middle, mouse.X, mouse.Y, NULL, height / 12, 1, NULL, NULL, 0, no, 100);
 				break;
 			case 2:
-				imgRender(renderer, build_pic[5], Middle, mousex, mousey, NULL, height / 12, 1, NULL, NULL, 0, no, 100);
+				imgRender(renderer, build_pic[5], Middle, mouse.X, mouse.Y, NULL, height / 12, 1, NULL, NULL, 0, no, 100);
 				break;
 			case 3:
-				imgRender(renderer, build_pic[6], Middle, mousex, mousey, NULL, height / 12, 1, NULL, NULL, 0, no, 100);
+				imgRender(renderer, build_pic[6], Middle, mouse.X, mouse.Y, NULL, height / 12, 1, NULL, NULL, 0, no, 100);
 				break;
 			case 4:
-				imgRender(renderer, build_pic[3], Middle, mousex, mousey, height / 12, NULL, 1, NULL, NULL, 0, no, 100);
-				break;																	
-			case 5:																		
-				imgRender(renderer, build_pic[7], Middle, mousex, mousey, NULL, height / 12, 1, NULL, NULL, 0, no, 100);
-				break;																	
-			case 6:																		
-				imgRender(renderer, build_pic[8], Middle, mousex, mousey, NULL, height / 12, 1, NULL, NULL, 0, no, 100);
-				break;																	
-			case 7:																		
-				imgRender(renderer, build_pic[9], Middle, mousex, mousey, NULL, height / 12, 1, NULL, NULL, 0, no, 100);
+				imgRender(renderer, build_pic[3], Middle, mouse.X, mouse.Y, height / 12, NULL, 1, NULL, NULL, 0, no, 100);
+				break;
+			case 5:
+				imgRender(renderer, build_pic[7], Middle, mouse.X, mouse.Y, NULL, height / 12, 1, NULL, NULL, 0, no, 100);
+				break;
+			case 6:
+				imgRender(renderer, build_pic[8], Middle, mouse.X, mouse.Y, NULL, height / 12, 1, NULL, NULL, 0, no, 100);
+				break;
+			case 7:
+				imgRender(renderer, build_pic[9], Middle, mouse.X, mouse.Y, NULL, height / 12, 1, NULL, NULL, 0, no, 100);
 				break;
 			case 8:
-				imgRender(renderer, build_pic[0], Middle, mousex, mousey, NULL, height / 12, 1, NULL, NULL, 0, no, 100);
+				imgRender(renderer, build_pic[0], Middle, mouse.X, mouse.Y, NULL, height / 12, 1, NULL, NULL, 0, no, 100);
 				break;
 			case 9:
-				imgRender(renderer, build_pic[1], Middle, mousex, mousey, NULL, height / 12, 1, NULL, NULL, 0, no, 100);
+				imgRender(renderer, build_pic[1], Middle, mouse.X, mouse.Y, NULL, height / 12, 1, NULL, NULL, 0, no, 100);
 				break;
 
+			}
 		}
 	}
 	return 0;

@@ -1,5 +1,4 @@
-#define CARNUM 32
-#define INITAILlRANDOMCARNUM 28
+#define CARNUM 100
 struct point {
 	int x, y;
 	bool exist;
@@ -9,11 +8,18 @@ struct point {
 point randomstart(const WindowData& fullViewport, int** road);
 void createRandomCar(CarData& car, WindowData& fullViewport, const point& start);
 
-int initCar(WindowData* fullViewport, CarData car[], Building **build) {
-	point* start = new point[INITAILlRANDOMCARNUM];
+int initCar(WindowData* fullViewport, CarData car[], Building **build, int randomcarnum) {
+	if (fullViewport == NULL) {
+		for(int i=0; i<CARNUM; i++)
+			if (car[i].path) {
+				delete car[i].path;
+				car[i].path = NULL;
+			}
+	}
+	point* start = new point[randomcarnum];
 	bool repeat = false;
-	int count = 0;
-	for (int i = 0; i < CARNUM; i++) {
+	int count = 0, i;
+	for (i = 0; i < CARNUM; i++) {
 		car[i].x = car[i].y = 0;
 		car[i].window = fullViewport;
 		car[i].path = NULL;
@@ -22,28 +28,41 @@ int initCar(WindowData* fullViewport, CarData car[], Building **build) {
 		car[i].velocity = -1;
 		car[i].intersect = false;
 	}
+	i = 0;
 	for (int x = 0; x < fullViewport->wnum - 1; x++)
 		for (int y = 0; y < fullViewport->hnum - 1; y++)
 			if (build[y][x].type == FireSta) {
-				car[0].type = 1;
-				car[1].type = 2;
-				car[0].velocity = car[1].velocity = -1;
-				car[0].home_x = car[1].home_x = x+1;
-				car[0].home_y = car[1].home_y = y+1;
+				while (car[i].type)
+					i++;
+				car[i].type = 1;
+				car[i].velocity = -1;
+				car[i].home_x = x+1;
+				car[i].home_y = y+1;
+				while (car[i].type)
+					i++;
+				car[i].type = 2;
+				car[i].velocity = -1;
+				car[i].home_x = x + 1;
+				car[i].home_y = y + 1;
+
 			}
 			else if (build[y][x].type == Logistics) {
-				car[2].type = 3;
-				car[2].velocity = -1;
-				car[2].home_x = x+1;
-				car[2].home_y = y+1;
+				while (car[i].type)
+					i++;
+				car[i].type = 3;
+				car[i].velocity = -1;
+				car[i].home_x = x + 1;
+				car[i].home_y = y + 1;
 			}
 			else if (build[y][x].type == PoliceOff) {
-				car[3].type = 4;
-				car[3].velocity = -1;
-				car[3].home_x = x+1;
-				car[3].home_y = y+1;
+				while (car[i].type)
+					i++;
+				car[i].type = 4;
+				car[i].velocity = -1;
+				car[i].home_x = x + 1;
+				car[i].home_y = y + 1;
 			}
-	for (int i = 0; i < INITAILlRANDOMCARNUM; i++) {
+	for (int i = 0; i < randomcarnum; i++) {
 		//printf("%d\n", i);
 		count = 0;
 		do {
@@ -60,8 +79,8 @@ int initCar(WindowData* fullViewport, CarData car[], Building **build) {
 				return count;
 		} while (repeat);
 	}
-	for (int i = 0; i < INITAILlRANDOMCARNUM; i++)
-		createRandomCar(car[CARNUM-INITAILlRANDOMCARNUM+i], *fullViewport, start[i]);
+	for (int i = 0; i < randomcarnum; i++)
+		createRandomCar(car[CARNUM- randomcarnum +i], *fullViewport, start[i]);
 	delete[]start;
 	return 0;
 }

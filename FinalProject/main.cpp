@@ -12,16 +12,18 @@
 #include "House.h"
 #include "Event.h"
 
+void InitialLevel(int, WindowData&, ValueData&, CarData*, EventData&, ImageData*);
 
 SDL_Window* window = NULL; // The window we'll be rendering to
-SDL_Renderer* renderer = NULL; // The window rendererint initSDL()   int w:1;
+SDL_Renderer* renderer = NULL; // The window rendererint initSDL()
 
 bool windowChange = false;
 
 
-WindowData fullViewport = { 0, 0, 8, 6, 1, 1};
+WindowData fullViewport;
 
-ValueData value = {0, 1, 0, 35, 0, 0};
+ValueData value = { 0, 0, 0, 0, 0, 0 };
+
 
 Building** build=NULL;
 
@@ -39,15 +41,16 @@ int main(int argc, char* args[])
 	SDL_GL_GetDrawableSize(window, &(fullViewport.w), &(fullViewport.h));
 	
 	//Main loop flag
-	bool quit = false;
+	bool quit = false, flag=false;
+	char pause = 0;
 
 	//Event handler
 	SDL_Event e;
-	MouseState mouseState;
-	int mouseX, mouseY;
+	Mouse mouse;
 
 	srand(time(NULL));
 
+	
 	//load images
 	char control_pic_path[3][100] = { "../images/pop_value.png", "../images/money_value.png","../images/love_value.png" };
 	ImageData control_pic[3];
@@ -73,29 +76,16 @@ int main(int argc, char* args[])
 	ImageData event_pic[6];
 	for (int i = 0; i < 6; i++)
 		event_pic[i] = loadImgTexture(renderer, event_pic_path[i], 1, 1, 1);
-	//Initialzing Car
+
 	CarData car[CARNUM];
-
-
-	createRandomMap(fullViewport, road, RoadLength);
-	destroyRoad(road, fullViewport.hnum, fullViewport.wnum);
-	createBuilding(build, fullViewport, road);
-
 	int next_inci, inci=0, inci_alpha=0, path_length;
-
-	while (initCar(&fullViewport, car, build)) {
-		createRandomMap(fullViewport, road, RoadLength);
-		destroyRoad(road, fullViewport.hnum, fullViewport.wnum);
-		createBuilding(build, fullViewport, road);
-	}
-
 	EventData event;
-	createEvent(event, fullViewport, event_pic, build, &value, car);
 
-	SDL_TimerID timerID_clock = SDL_AddTimer(10, clock_add, &value);
+	
+	SDL_TimerID timerID_clock;
 	SDL_TimerID timerID_incident;
-	SDL_TimerID timerID_car = SDL_AddTimer(10, car_move, car);
-	SDL_TimerID timerID_event = SDL_AddTimer(30, event_change, &event);
+	SDL_TimerID timerID_car;
+	SDL_TimerID timerID_event;
 
 	//While application is running
 	while (!quit)
@@ -110,7 +100,7 @@ int main(int argc, char* args[])
 			windowChange = false;
 		}
 
-		mouseState = NONE; //Handle events on queue
+		mouse.state = NONE; //Handle events on queue
 		while (SDL_PollEvent(&e) != 0)
 		{
 			//User requests quit
@@ -119,7 +109,7 @@ int main(int argc, char* args[])
 				quit = true;
 			}
 			keyboardHandleEvent(e, quit);
-			mouseHandleEvent(&e, &mouseState, &mouseX, &mouseY);
+			mouseHandleEvent(&e, &mouse.state, &mouse.X, &mouse.Y);
 		}
 
 		// Clear screen
@@ -127,40 +117,112 @@ int main(int argc, char* args[])
 		SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
 		SDL_RenderClear(renderer);
 
-		//draw screen
-		mapRender(renderer, fullViewport, road_pic, road_pic1); 
-		controlRender(renderer, fullViewport, windowChange, value, control_pic, build_pic, flag_pic);
-		buildRender(renderer, fullViewport, build, build_pic);
-		eventRender(renderer, fullViewport, event, car, cloud_pic, build, value);
-		carRender(renderer, fullViewport, car, car_pic, cloud_pic);
-		incident(renderer, fullViewport, windowChange, inci, inci_alpha);
-		
-		//add things
-		next_inci = addCar(renderer, fullViewport, mouseState, mouseX, mouseY, event,build, car, car_pic);
-		next_inci += addBuild(renderer, fullViewport, mouseState, mouseX, mouseY, build, build_pic, car);
-		if (next_inci||inci) {
-			if (next_inci) {
-				inci = next_inci;
-				inci_alpha = 450;
-				timerID_incident = SDL_AddTimer(50, incident_add, &inci_alpha);
+		if (value.level) {
+			flag = true;
+
+			if (next_inci || inci) {
+				if (next_inci) {
+					inci = next_inci;
+					inci_alpha = 450;
+					timerID_incident = SDL_AddTimer(50, incident_add, &inci_alpha);
+				}
+				else if (inci && (!inci_alpha))
+					inci = 0;
 			}
-			else if (inci&&(!inci_alpha))
-				inci = 0;
+
+			//draw screen
+			mapRender(renderer, fullViewport, road_pic, road_pic1);
+			buildRender(renderer, fullViewport, build, build_pic);
+			next_inci=eventRender(renderer, fullViewport, event, car, cloud_pic, build, value);
+			carRender(renderer, fullViewport, car, car_pic, cloud_pic);
+			incident(renderer, fullViewport, windowChange, inci, inci_alpha);
+			controlRender(renderer, fullViewport, windowChange, mouse, pause, value, control_pic, build_pic, flag_pic);
+
+			//add things
+			next_inci += addCar(renderer, fullViewport, mouse, pause, event, build, car, car_pic);
+			next_inci += addBuild(renderer, fullViewport, mouse, value.money, build, build_pic, car);
+			
+			switch (pause) {
+			case 1:
+				pause = 2;
+				SDL_RemoveTimer(timerID_clock);
+				SDL_RemoveTimer(timerID_car);
+				SDL_RemoveTimer(timerID_event);
+				break;
+			case 3:
+				pause = 0;
+				timerID_clock = SDL_AddTimer(10, clock_add, &value);
+				timerID_car = SDL_AddTimer(10, car_move, car);
+				timerID_event = SDL_AddTimer(1000, event_change, &event);
+				break;
+			case 4:
+				quit = true;
+				break;
+			case 5:
+				value.level = 0;
+				pause = 0;
+				SDL_RemoveTimer(timerID_clock);
+				SDL_RemoveTimer(timerID_car);
+				SDL_RemoveTimer(timerID_event);
+				car_move(NULL, (void*)car);
+				createBuilding(build, fullViewport, road, 0);
+				createRandomMap(fullViewport, road, 0);
+				InitialLevel(value.level, fullViewport, value, car, event, event_pic);
+				break;
+			}
+		}
+		else {
+			if (menuRender(renderer, fullViewport, windowChange, mouse, value)) {
+				quit = true;
+			}
+			if (value.level) {
+				inci = 0, inci_alpha = 0;
+				InitialLevel(value.level, fullViewport, value, car, event, event_pic);
+				next_inci = event.type + 6;
+				timerID_clock = SDL_AddTimer(10, clock_add, &value);
+				timerID_incident;
+				timerID_car = SDL_AddTimer(10, car_move, car);
+				timerID_event = SDL_AddTimer(1000, event_change, &event);
+			}
 		}
 		
 		// Update screen
 		SDL_RenderPresent(renderer);
 	}	
 
-	//Free resources and close SDL
-	SDL_RemoveTimer(timerID_clock);
-	SDL_RemoveTimer(timerID_car);
-	//SDL_RemoveTimer(timerID_event);
-	incident(NULL, fullViewport, windowChange, inci, inci_alpha);
-	mapRender(NULL, fullViewport, road_pic, road_pic1);
-	controlRender(NULL, fullViewport, windowChange, value, control_pic, build_pic, flag_pic);
-	buildRender(NULL, fullViewport, build, build_pic);
-	closeSDL(window,renderer);
+	if (flag) {
+		incident(NULL, fullViewport, windowChange, inci, inci_alpha);
+		mapRender(NULL, fullViewport, road_pic, road_pic1);
+		controlRender(NULL, fullViewport, windowChange, mouse, pause, value, control_pic, build_pic, flag_pic);
+		buildRender(NULL, fullViewport, build, build_pic);
+	}
+	closeSDL(window, renderer);
 
 	return 0;
+}
+
+void InitialLevel(int level, WindowData& fullViewport, ValueData& value, CarData car[], EventData& event, ImageData event_pic[]) {
+	fullViewport.oldh = fullViewport.oldw = 1;
+	value.level = level;
+	switch (level) {
+	case 0:
+		fullViewport.hnum = fullViewport.wnum = 1;
+		break;
+	case 1:
+	case 2:
+	case 3:
+		fullViewport.hnum = 3 + 3 * level, fullViewport.wnum = 5 + 3 * level;
+		//initial value
+		value.time = 0, value.season = rand() % 4, value.population = 35 * value.level, value.money = 0;
+		createRandomMap(fullViewport, road, fullViewport.hnum*fullViewport.wnum*0.85);
+		destroyRoad(road, fullViewport.hnum, fullViewport.wnum);
+		createBuilding(build, fullViewport, road, fullViewport.hnum * fullViewport.wnum /4);
+		while (initCar(&fullViewport, car, build, fullViewport.hnum*fullViewport.wnum/3)) {
+			createRandomMap(fullViewport, road, 25 + 20 * value.level);
+			destroyRoad(road, fullViewport.hnum, fullViewport.hnum * fullViewport.wnum * 0.85);
+			createBuilding(build, fullViewport, road, fullViewport.hnum * fullViewport.wnum/3);
+		}
+		createEvent(event, fullViewport, event_pic, build, &value, car);
+		break;
+	}
 }

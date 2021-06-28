@@ -3,7 +3,7 @@ void createEvent(EventData& e, WindowData& fullViewport, ImageData event_pic[], 
 	e.car = car;
 	e.value = value;
 	int sx, sy;
-	/*int p, q;
+	int p, q;
 	int* type = new int[6];
 	do {
 		switch (e.level) {
@@ -11,21 +11,21 @@ void createEvent(EventData& e, WindowData& fullViewport, ImageData event_pic[], 
 			p = rand() % 10000;
 			p *= 2;
 			p = p % 10000;
-			if (p > 1000)
+			if (p < 100)
 				e.exist = true;
 			break;
 		case 2:
 			p = rand() % 10000;
 			p *= 4;
 			p = p % 10000;
-			if (p > 2500)
+			if (p < 250)
 				e.exist = true;
 			break;
 		case 3:
 			p = rand() % 10000;
 			p *= 8;
 			p = p % 10000;
-			if (p > 5000)
+			if (p < 500)
 				e.exist = true;
 			break;
 		}
@@ -55,7 +55,7 @@ void createEvent(EventData& e, WindowData& fullViewport, ImageData event_pic[], 
 				type[5] = 1;
 			else
 				type[5] = 0;
-			if (type[0] + type[1] + type[2] + type[3] + type[4] + type[5]  == 0)
+			if (type[0] + type[1] + type[2] + type[3] + type[4] + type[5] == 0)
 				e.type = 6;
 			else {
 				do {
@@ -89,7 +89,7 @@ void createEvent(EventData& e, WindowData& fullViewport, ImageData event_pic[], 
 				type[5] = 1;
 			else
 				type[5] = 0;
-			if (type[0] + type[1] + type[2] + type[3] + type[4] + type[5]  == 0)
+			if (type[0] + type[1] + type[2] + type[3] + type[4] + type[5] == 0)
 				e.type = 6;
 			else {
 				do {
@@ -123,7 +123,7 @@ void createEvent(EventData& e, WindowData& fullViewport, ImageData event_pic[], 
 				type[5] = 1;
 			else
 				type[5] = 0;
-			if (type[0] + type[1] + type[2] + type[3] + type[4] + type[5]  == 0)
+			if (type[0] + type[1] + type[2] + type[3] + type[4] + type[5] == 0)
 				e.type = 6;
 			else {
 				do {
@@ -137,7 +137,7 @@ void createEvent(EventData& e, WindowData& fullViewport, ImageData event_pic[], 
 				type[0] = 1;
 			else
 				type[0] = 0;
-			if (rand() % 1000 < 25 *4* (e.level))
+			if (rand() % 1000 < 25 * 4 * (e.level))
 				type[1] = 1;
 			else
 				type[1] = 0;
@@ -167,10 +167,10 @@ void createEvent(EventData& e, WindowData& fullViewport, ImageData event_pic[], 
 			}
 			break;
 		}
-	} while (!((e.exist == true) && (e.type == 6)) && !((e.exist == false) && (e.type != 6)));
-	delete[]type;*/
-	e.exist = true;
-	e.type = rand()%6;
+	} while (!((e.exist == true) && (e.type != 6)) && !((e.exist == false) && (e.type == 6)));
+	delete[]type;
+	//e.exist = true;
+	//e.type = rand()%6;
 	e.time = 0;
 	e.img = event_pic;
 	int hnum = fullViewport.hnum - 1, wnum = fullViewport.wnum - 1;
@@ -367,31 +367,126 @@ Uint32 event_change(Uint32 interval, void* param)
 	EventData* t = (EventData*)param;
 	if (t->exist == false) {
 		if (t->time < 0)
-			t->time += 5;
-		if (t->time == -255)
+			t->time += 40;
+		if (t->time >= -295&&t->time<-255)
 			t->time = 0;
 		return interval;
 	}
 	else {
 		t->time++;
-		//這個是我的方式(可以用type去做細部分類，但就交給你了)
-		t->value->money -= t->time/500;
-		t->value->love -= t->time/800;
-		t->value->population -= t->time/1000;
+		switch (t->type) {//優先級: 0 -> 4 -> 1 -> 5 -> 3 -> 2
+		case 0:
+			if (t->value->money >= 0)
+				t->value->money -= 5 * (t->time / 15) * t->level;
+			else {
+				if ((t->value->population > 0) && (t->value->population >= t->time))
+					t->value->population -= t->time;
+			}
+			if (t->value->love >= 0)
+				t->value->love -= t->time / 20;
+			else {
+				if ((t->value->population > 0) && (t->value->population >= t->time))
+					t->value->population -= t->time;
+			}
+			if ((t->value->population > 0) && (t->value->population >= t->time / 30))
+				t->value->population -= t->time / 30;
+			break;
+		case 1:
+			if (t->value->money >= 0)
+				t->value->money -= 5 * (t->time / 20) * t->level;
+			else {
+				if ((t->value->population > 0) && (t->value->population >= t->time))
+					t->value->population -= t->time;
+			}
+			if (t->value->love >= 0)
+				t->value->love -= t->time / 20;
+			else {
+				if ((t->value->population > 0) && (t->value->population >= t->time))
+					t->value->population -= t->time;
+			}
+			if ((t->value->population > 0) && (t->value->population >= t->time / 35))
+				t->value->population -= t->time / 35;
+			break;
+		case 2:
+			if (t->value->money >= 0)
+				t->value->money -= 5 * (t->time / 50) * t->level;
+			else {
+				if ((t->value->population > 0) && (t->value->population >= t->time))
+					t->value->population -= t->time;
+			}
+			if (t->value->love >= 0)
+				t->value->love -= t->time / 40;
+			else {
+				if ((t->value->population > 0) && (t->value->population >= t->time))
+					t->value->population -= t->time;
+			}
+			break;
+		case 3:
+			if (t->value->money >= 0)
+				t->value->money -= 5 * (t->time / 15) * t->level;
+			else {
+				if ((t->value->population > 0) && (t->value->population >= t->time))
+					t->value->population -= t->time;
+			}
+			if (t->value->love >= 0)
+				t->value->love -= t->time / 30;
+			else {
+				if ((t->value->population > 0) && (t->value->population >= t->time))
+					t->value->population -= t->time;
+			}
+			break;
+		case 4:
+			if (t->value->money >= 0)
+				t->value->money -= 5 * (t->time / 15) * t->level;
+			else {
+				if ((t->value->population > 0) && (t->value->population >= t->time))
+					t->value->population -= t->time;
+			}
+			if (t->value->love >= 0)
+				t->value->love -= t->time / 20;
+			else {
+				if ((t->value->population > 0) && (t->value->population >= t->time))
+					t->value->population -= t->time;
+			}
+			if ((t->value->population > 0) && (t->value->population >= t->time / 100))
+				t->value->population -= t->time / 100;
+			break;
+		case 5:
+			if (t->value->money >= 0)
+				t->value->money -= 5 * (t->time / 20) * t->level;
+			else {
+				if ((t->value->population > 0) && (t->value->population >= t->time))
+					t->value->population -= t->time;
+			}
+			if (t->value->love >= 0)
+				t->value->love -= t->time / 35;
+			else {
+				if ((t->value->population > 0) && (t->value->population >= t->time))
+					t->value->population -= t->time;
+			}
+			if ((t->value->population > 0) && (t->value->population >= t->time / 50))
+				t->value->population -= t->time / 50;
+			break;
+		default:
+			break;
+		}
+
 		return interval;
 	}
 }
 
-void eventRender(SDL_Renderer* renderer, WindowData& fullViewport, EventData& e, CarData car[], ImageData cloud_pic[], Building **build, ValueData &value) {
+int eventRender(SDL_Renderer* renderer, WindowData& fullViewport, EventData& e, CarData car[], ImageData cloud_pic[], Building **build, ValueData &value) {
 	int width = fullViewport.w, height = fullViewport.h, hnum = fullViewport.hnum, wnum = fullViewport.wnum;
 	void (*f1[6])(SDL_Renderer *,WindowData&, EventData&, ImageData*) = { FireRender,CarAccidentRender,RoadClosureRender,DeliveryRender,ThiefRender,LighteningRender};
 	void (*f2[6])(EventData&, ValueData&) = { Fire,CarAccident,RoadClosure,Delivery,Thief,Lightening };
 	if (e.exist == false) {
 		if(e.time<0)
 			(*f1[e.type])(renderer, fullViewport, e, cloud_pic);
-		else
+		else {
 			createEvent(e, fullViewport, e.img, build, &value, car);
-		return;
+			if(e.exist)
+				return e.type + 6;
+		}
 	}
 	else {
 		for (int i = 0; i < CARNUM; i++) {
@@ -400,12 +495,12 @@ void eventRender(SDL_Renderer* renderer, WindowData& fullViewport, EventData& e,
 				//0:fire	1 : car accident	2 : road closure	3 : delivery	4 : thief	5 : lightening
 				switch (e.type) {
 				case 0:
-					if (build[(int)(e.y - 1)][(int)(e.x - 1)].type == Factory) {
+					if (build[(int)(e.y - 1)][(int)(e.x - 1)].type&& build[(int)(e.y - 1)][(int)(e.x - 1)].type<=7) {
 						if (car[i].type != 2)
 							continue;
 					}
 					else {
-						if (car[i].type != 1 && car[i].type != 2)
+						if (car[i].type != 1)
 							continue;
 					}
 					break;
@@ -420,19 +515,12 @@ void eventRender(SDL_Renderer* renderer, WindowData& fullViewport, EventData& e,
 						continue;
 					break;
 				case 5:
-					if (car[i].type != 1 && car[i].type != 2)
+					if (car[i].type != 1)
 						continue;
 					break;
 				}
 				e.exist = false;
-				/*這個是你的方式
 				(*f2[e.type])(e, value);
-				*/
-				//這個是我的方式(可以用type去做細部分類，但就交給你了)
-				e.value->money += 100;
-				e.value->love += 200;
-				e.value->population += 20;
-
 				break;
 			}
 		}
@@ -442,4 +530,5 @@ void eventRender(SDL_Renderer* renderer, WindowData& fullViewport, EventData& e,
 			else
 				imgRender(renderer, e.img[e.type], Middle, e.x * (width - height / 12) / wnum, e.y * (height - height / 12) / hnum + height / 12, fmin((width - height / 12) / wnum * 4 / 5, (height - height / 12) / hnum * 2/ 3 * e.img[e.type].width / e.img[e.type].height), NULL, 1, NULL, NULL, 0, no, 255);
 	}
+	return 0;
 }
