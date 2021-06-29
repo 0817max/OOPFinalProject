@@ -10,7 +10,6 @@ bool equalIntersect(char* intersect, int direction1, int direction2, int num);
 
 void createCar(CarData& car, WindowData& fullViewport, double house_hnum, double house_wnum, bool house_point, int type, ImageData car_pic[]) {
 	int width = fullViewport.w, height = fullViewport.h, wnum = fullViewport.wnum, hnum = fullViewport.hnum, oldw=fullViewport.oldw, oldh=fullViewport.oldh;
-
 	char* path;
 	car.length = INT_MAX;
 	car.path = NULL;
@@ -172,8 +171,8 @@ void createCar(CarData& car, WindowData& fullViewport, double house_hnum, double
 	car.intersect = false;
 }
 
-int addCar(SDL_Renderer* renderer, WindowData& fullViewport, const Mouse& mouse, char& pause, const EventData &event, Building**& build , CarData car[], ImageData car_pic[]) {
-	int width = fullViewport.w, height = fullViewport.h, wnum = fullViewport.wnum, hnum = fullViewport.hnum, xnum, ynum;
+void addCar(SDL_Renderer* renderer, WindowData& fullViewport, const Mouse& mouse, char& pause, const EventData event[], Building**& build , CarData car[], ImageData car_pic[], InciData& inci) {
+	int width = fullViewport.w, height = fullViewport.h, wnum = fullViewport.wnum, hnum = fullViewport.hnum, xnum, ynum, carnum = fullViewport.carnum;
 	static int choose = 0, select=0;
 	static SDL_TimerID timerID_clock;
 	double x, y;
@@ -194,17 +193,25 @@ int addCar(SDL_Renderer* renderer, WindowData& fullViewport, const Mouse& mouse,
 			x = (double)mouse.X / ((width - height / 12) / wnum);
 			y = (double)(mouse.Y - height / 12) / ((height - height / 12) / hnum);
 		//	printf("%d %lf %lf %lf %lf\n", choose, x, y, event.x, event.y);
-			if (choose == 4 && (event.type == 1 || event.type == 2) && fabs(event.x - x) < 0.3 && fabs(event.y - y) < 0.5) {
+			int special = 0;
+			if(choose==4)
+				for (int i = 0; i < *(event[0].level); i++) {
+					if((event[i].type == 1 || event[i].type == 2) && fabs(event[i].x - x) < 0.3 && fabs(event[i].y - y) < 0.5){
+						special = i + 1;
+						break;
+					}
+				}
+			if (special) {
 				CarData t, min;
 				int min_num = -1;
 				min.length = INT_MAX;
 				//search for stopping special car
-				for (int i = 0; i < CARNUM; i++)
+				for (int i = 0; i < carnum; i++)
 					if (car[i].type == choose && car[i].velocity < 0) {
 						if (!car[i].path)
 							delete[](car[i].path);
 						t = car[i];
-						createCar(t, fullViewport, event.y, event.x, true, choose, car_pic);
+						createCar(t, fullViewport, event[special-1].y, event[special-1].x, true, choose, car_pic);
 						//find the closet car
 						if (t.length < min.length) {
 							min = t;
@@ -215,7 +222,9 @@ int addCar(SDL_Renderer* renderer, WindowData& fullViewport, const Mouse& mouse,
 					}
 				//there is no car
 				if (min_num == -1) {
-					return 4;
+					inci.addcar=2;
+					inci.alpha[1] = 450;
+					return;
 				}
 				else {
 					car[min_num] = min;
@@ -226,14 +235,16 @@ int addCar(SDL_Renderer* renderer, WindowData& fullViewport, const Mouse& mouse,
 				x = (mouse.X - (width - height / 12) / wnum / 2) / ((width - height / 12) / wnum) + 1;
 				y = (mouse.Y - height / 12 - (height - height / 12) / hnum / 2) / ((height - height / 12) / hnum) + 1;
 				if (build[(int)(y - 1)][(int)(x - 1)].type == Empty) {
-					return 3;
+					inci.addcar = 1;
+					inci.alpha[1] = 450;
+					return;
 				}
 				else {
 					CarData t, min;
 					int  min_num = -1;
 					min.length = INT_MAX;
 					//search for stopping special car
-					for (int i = 0; i < CARNUM; i++)
+					for (int i = 0; i < carnum; i++)
 						if (car[i].type == choose && car[i].velocity < 0) {
 							if (!car[i].path)
 								delete[](car[i].path);
@@ -249,7 +260,9 @@ int addCar(SDL_Renderer* renderer, WindowData& fullViewport, const Mouse& mouse,
 						}
 					//there is no car
 					if (min_num == -1) {
-						return 4;
+						inci.addcar = 2;
+						inci.alpha[1] = 450;
+						return;
 					}
 					else {
 						car[min_num] = min;
@@ -274,18 +287,30 @@ int addCar(SDL_Renderer* renderer, WindowData& fullViewport, const Mouse& mouse,
 	}
 	else if (mouse.X > (width - height / 12) && mouse.Y > (height * 10 / 12) && mouse.Y <= (height * 12 / 12))
 		boxColor(renderer, (width - height / 12)+ height / 1000 + 1, (height * 10 / 12)+ height / 1000 + 1, width, height, 0x22FFFFFF);
-	else if(choose)
-			if (choose == 4 && (event.type == 1 || event.type == 2) && fabs(event.x - (double)mouse.X / ((width - height / 12) / wnum)) < 0.3 && fabs(event.y - (double)(mouse.Y - height / 12) / ((height - height / 12) / hnum)) < 0.5) {
-				if (event.h)
-					boxColor(renderer, (double)(width - height / 12) / wnum * (event.x - 0.5+1/10.), height / 12 + (double)(height - height / 12) / hnum * event.y - (height - height / 12) / hnum / 6., (double)(width - height / 12) / wnum * (event.x + 0.5-1/10.), height / 12 + (double)(height - height / 12) / hnum * event.y + (height - height / 12) / hnum / 6., 0x22FFFFFF);
-				else
-					boxColor(renderer, (double)(width - height / 12) / wnum * (event.x -1/10.), height / 12 + (double)(height - height / 12) / hnum * (event.y - 0.5+1/6.), (double)(width - height / 12) / wnum * (event.x+1/10.), height / 12 + (double)(height - height / 12) / hnum * (event.y + 0.5-1/6.), 0x22FFFFFF);
+	else if (choose) {
+		int special = 0;
+		x = (double)mouse.X / ((width - height / 12) / wnum);
+		y = (double)(mouse.Y - height / 12) / ((height - height / 12) / hnum);
+		if (choose == 4)
+			for (int i = 0; i < *(event[0].level); i++) {
+				if ((event[i].type == 1 || event[i].type == 2) && fabs(event[i].x - x) < 0.3 && fabs(event[i].y - y) < 0.5) {
+					special = i + 1;
+					break;
+				}
 			}
-			else if (mouse.X > (width - height / 12) / wnum / 2 && mouse.X<(width - height / 12 - (width - height / 12) / wnum / 2) && mouse.Y >(height / 12 + ((height - height / 12) / hnum) / 2) && mouse.Y < (height - ((height - height / 12) / hnum) / 2)) {
-				xnum = (mouse.X - (width - height / 12) / wnum / 2) / ((width - height / 12) / wnum);
-				ynum = (mouse.Y - height / 12 - (height - height / 12) / hnum / 2) / ((height - height / 12) / hnum);
-				boxColor(renderer, (double)(width - height / 12) / wnum * (0.5 + xnum + 1 / 10.), height / 12 + ((double)(height - height / 12) / hnum) * (ynum + 0.5 + 1 / 6.), (double)(width - height / 12) / wnum * (1.5 + xnum - 1 / 10.), height / 12 + ((double)(height - height / 12) / hnum) * (ynum + 1.5 - 1 / 6.), 0x22FFFFFF);
-			}
+
+		if (special) {
+			if (event[special-1].h)
+				boxColor(renderer, (double)(width - height / 12) / wnum * (event[special - 1].x - 0.5 + 1 / 10.), height / 12 + (double)(height - height / 12) / hnum * event[special - 1].y - (height - height / 12) / hnum / 6., (double)(width - height / 12) / wnum * (event[special - 1].x + 0.5 - 1 / 10.), height / 12 + (double)(height - height / 12) / hnum * event[special - 1].y + (height - height / 12) / hnum / 6., 0x22FFFFFF);
+			else
+				boxColor(renderer, (double)(width - height / 12) / wnum * (event[special - 1].x - 1 / 10.), height / 12 + (double)(height - height / 12) / hnum * (event[special - 1].y - 0.5 + 1 / 6.), (double)(width - height / 12) / wnum * (event[special - 1].x + 1 / 10.), height / 12 + (double)(height - height / 12) / hnum * (event[special - 1].y + 0.5 - 1 / 6.), 0x22FFFFFF);
+		}
+		else if (mouse.X > (width - height / 12) / wnum / 2 && mouse.X<(width - height / 12 - (width - height / 12) / wnum / 2) && mouse.Y >(height / 12 + ((height - height / 12) / hnum) / 2) && mouse.Y < (height - ((height - height / 12) / hnum) / 2)) {
+			xnum = (mouse.X - (width - height / 12) / wnum / 2) / ((width - height / 12) / wnum);
+			ynum = (mouse.Y - height / 12 - (height - height / 12) / hnum / 2) / ((height - height / 12) / hnum);
+			boxColor(renderer, (double)(width - height / 12) / wnum * (0.5 + xnum + 1 / 10.), height / 12 + ((double)(height - height / 12) / hnum) * (ynum + 0.5 + 1 / 6.), (double)(width - height / 12) / wnum * (1.5 + xnum - 1 / 10.), height / 12 + ((double)(height - height / 12) / hnum) * (ynum + 1.5 - 1 / 6.), 0x22FFFFFF);
+		}
+	}
 
 	//Cliking the flag
 	if (select) {
@@ -314,9 +339,6 @@ int addCar(SDL_Renderer* renderer, WindowData& fullViewport, const Mouse& mouse,
 		break;
 	}
 	
-	
-
-	return 0;
 }
 
 int carMenu(SDL_Renderer* renderer, const WindowData& fullViewport, const Mouse& mouse, int& choose, ImageData car_pic[]) {
@@ -377,8 +399,9 @@ int carMenu(SDL_Renderer* renderer, const WindowData& fullViewport, const Mouse&
 }
 
 void carRender(SDL_Renderer* renderer, const WindowData& fullViewport, CarData car[], ImageData car_pic[], ImageData cloud_pic[]) {
-	int width = fullViewport.w, height = fullViewport.h, hnum = fullViewport.hnum, wnum = fullViewport.wnum;
-	for (int i = 0; i < CARNUM; i++) {
+	int width = fullViewport.w, height = fullViewport.h, hnum = fullViewport.hnum, wnum = fullViewport.wnum, carnum = fullViewport.carnum;
+	;
+	for (int i = 0; i < carnum; i++) {
 
 		if (car[i].type >= 5 && car[i].type <= 7) {
 			if (car[i].angle % 180) {
@@ -406,7 +429,7 @@ void carRender(SDL_Renderer* renderer, const WindowData& fullViewport, CarData c
 Uint32 car_move(Uint32 interval, void* param)
 {
 	CarData *t = (CarData*)param;
-	int width = t[4].window->w, height = t[4].window->h, wnum = t[4].window->wnum, hnum = t[4].window->hnum;
+	int width = t[4].window->w, height = t[4].window->h, wnum = t[4].window->wnum, hnum = t[4].window->hnum, carnum=t[4].window->carnum;
 	
 	//create the intersect for car (divide into four piece: 0:lefttop 1:righttop 2:rightbottom 3:leftbottom)
 	static char*** CarIntersect = NULL;
@@ -418,11 +441,13 @@ Uint32 car_move(Uint32 interval, void* param)
 		}
 		delete[]CarIntersect;
 		CarIntersect = NULL;
-		for (int i = 0; i < CARNUM; i++)
+		for (int i = 0; i < carnum; i++) {
 			if (t[i].path) {
 				delete t[i].path;
 				t[i].path = NULL;
 			}
+		}
+		delete[]t;
 		return 0;
 		
 	}
@@ -437,7 +462,7 @@ Uint32 car_move(Uint32 interval, void* param)
 			}
 		}
 	}
-	for (int i = 0; i < CARNUM; i++) {
+	for (int i = 0; i < carnum; i++) {
 		//car drives over the region
 		if (t[i].x<0.45 || t[i].x>wnum - 0.45 || t[i].y<0.45 || t[i].y>hnum - 0.45) {
 			t[i].velocity = -1;
@@ -490,7 +515,7 @@ Uint32 car_move(Uint32 interval, void* param)
 		//stop when there is a car in front of mycar(by direction) 
 		bool stop = false;
 		if(t[i].angle % 90 == 0)
-			for (int k = 0; k < CARNUM; k++) {
+			for (int k = 0; k < carnum; k++) {
 				t[i].angle %= 360;
 				if (i == k || t[k].velocity < 0)
 					continue;

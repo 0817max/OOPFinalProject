@@ -1,37 +1,74 @@
 Background
-	Welcome to your city!
-	Here, you are the leader of this city.
-	You can build more house and assign work to finish the mission.
-	Try your best to make your city prosperous!
+	Welcome, player!
+	Here, you crown the city.
+	You can build several houses you want, BUT REMEMBER to complete the missions.
+	Push yourself to your very best and try to make your city great again.
+	Good Luck,and you’ll need it.
 
 Introduction
 	I.Resource:
-		Population:
+		A.Population:
+			Population has a strong connection with Money and Happiness.
+			Population will increase over time.
+			If a mission is left aside for a period, it will bring about some certain death or moving away.
+			A mission failed will lead to a Population loss.
 			
-		Money:
+		B.Money:
+			Money is mainly for building different buildings.
+			Money will increase over time.
+			If the mission is left aside for a period of time, your city will be fined.
+			A mission failed will lead to some considerate penalty.
 			
-		Happiness:
+		C.Happiness:
+			Happiness is the measurement of how content and satisfied the people in your city are. 
+			Happiness will increase over time until it achieves an amount.
+			You can earn more Happiness by completing missions in time.
+			If the mission is left aside for a period, it will cut down on Happiness. 
+			A mission failed will lead to a Happiness decreasing.
+
 			
 	II.House:
-		A.
-			
-		B.
-			
-		C.
-			
-		D.
-			
-		E.
-			
+		A.Normal House(cost 150 Money per building)
+		B.Special House(cost 200 Money per building)
+			a.Fire Station
+				Having a Fire Station, you can assign a firefighter of dealing with the event "Fire" and "Lightening". 
+			b.Courier Company
+				Having a Courier Company, you can assign a truck of dealing with the event "Delivery Service". 
+			c.Police Station
+				Having a Police Station, you can assign a police officer of dealing with the event "Car Accident","Road Closure",and "Theft". 
+			d.Factory
+			e.Supermarket
+			f.School
+			g.Hospital
+		
 	III.Mission System:
-		Event:
-			A.
-				
-			B.
-				
-			C.
-				
-			D.
-				
-			E.
-				
+		A.Car:
+			a.Fire Truck
+			b.Chemical Truck
+			c.Truck
+			d.Police Car
+		B.Season:
+			a.Spring
+				less "Fire" and more "Lightening"
+			b.Summer
+				more "Fire"
+			c.Autumn
+				general
+			d.Winter
+				less "Fire" and more "Car Accident" and "Road Closure"
+		C.Event:
+			a.Fire
+				If a normal house is on fire, use "Fire Truck" to put out fire.
+				If a special house is on fire, use "Chemical Truck" to put out fire.
+			b.Car Accident
+				Assign "Police Car" the task.
+			c.Road Closure
+				Assign "Police Car" the task.
+			d.Delivery Service
+				Assign "Truck" the task.
+			e.Theft
+				Assign "Police Car" the task of catching the thief.
+			f.Lightening
+				Assign "Fire Truck" the task.
+
+

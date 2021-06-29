@@ -37,11 +37,15 @@ void createBuilding(Building **&build, const WindowData& fullViewport, int** roa
 	} while (c < num);
 }
 
-int addBuild(SDL_Renderer* renderer, const WindowData& fullViewport, const Mouse& mouse, int& money, Building** build, ImageData build_pic[], CarData car[]) {
-	int width = fullViewport.w, height = fullViewport.h, wnum=fullViewport.wnum, hnum=fullViewport.hnum, xnum, ynum;
+void addBuild(SDL_Renderer* renderer, const WindowData& fullViewport, const Mouse& mouse, int& money, Building** build, ImageData build_pic[], CarData car[], InciData& inci) {
+	int width = fullViewport.w, height = fullViewport.h, wnum=fullViewport.wnum, hnum=fullViewport.hnum, xnum, ynum, carnum = fullViewport.carnum;
 	static int choose = 0;
-	static SDL_TimerID timerID_clock;
 	
+	if (renderer == NULL) {
+		choose = 0;
+		return ;
+	}
+
 	//Left Click
 	if (mouse.state == IN_LB_SC) {
 
@@ -55,14 +59,21 @@ int addBuild(SDL_Renderer* renderer, const WindowData& fullViewport, const Mouse
 				if (build[ynum][xnum].type == Empty) {
 					if (checkRoad(ynum, xnum)) {
 						if (choose && choose <= 7) {
-							if (money < 200)
-								return 5;
+							if (money < 200) {
+								inci.addhouse = 3;
+								inci.alpha[0] = 450;
+								return;
+							}
+
 							else
 								money -= 200;
 						}
 						else {
-							if (money < 150)
-								return 5;
+							if (money < 150) {
+								inci.addhouse = 3;
+								inci.alpha[0] = 450;
+								return;
+							}
 							else
 								money -= 150;
 						}
@@ -70,7 +81,7 @@ int addBuild(SDL_Renderer* renderer, const WindowData& fullViewport, const Mouse
 						//adding more special car
 						if (choose == FireSta) {
 							int c = 0, i=0;
-							while (c < 2&&i<CARNUM) {
+							while (c < 2&&i<carnum) {
 								if (car[i].type > 4 || car[i].type == 0) {
 									car[i].velocity = -3;
 									car[i].type = c + 1;
@@ -84,10 +95,10 @@ int addBuild(SDL_Renderer* renderer, const WindowData& fullViewport, const Mouse
 						}
 						else if (choose == Logistics) {
 							int i = 0;
-							while (car[i].type <= 4 && car[i].type != 0 && i < CARNUM) {
+							while (car[i].type <= 4 && car[i].type != 0 && i < carnum) {
 								i++;
 							}
-							if (i < CARNUM) {
+							if (i < carnum) {
 								car[i].velocity = -3;
 								car[i].type = 3;
 								car[i].home_x = xnum+1;
@@ -97,10 +108,10 @@ int addBuild(SDL_Renderer* renderer, const WindowData& fullViewport, const Mouse
 						}
 						else if (choose==PoliceOff){
 							int i = 0;
-							while (car[i].type <= 4 && car[i].type != 0 && i < CARNUM) {
+							while (car[i].type <= 4 && car[i].type != 0 && i < carnum) {
 								i++;
 							}
-							if (i < CARNUM) {
+							if (i < carnum) {
 								car[i].velocity = -3;
 								car[i].type = 4;
 								car[i].home_x = xnum+1;
@@ -109,11 +120,18 @@ int addBuild(SDL_Renderer* renderer, const WindowData& fullViewport, const Mouse
 							}
 						}
 					}
-					else 
-						return 1;
+					else {
+						inci.addcar = 1;
+						inci.alpha[0] = 450;
+						return;
+					}
+						
 				}
-				else
-					return 2;
+				else {
+					inci.addcar = 2;
+					inci.alpha[0] = 450;
+					return;
+				}
 			}
 		}
 
@@ -132,8 +150,8 @@ int addBuild(SDL_Renderer* renderer, const WindowData& fullViewport, const Mouse
 
 	//Fixed chosen building on mouse
 	else {
-		if (mouse.X >= (width -height / 12) && mouse.Y >= (height / 12.) && mouse.Y < (height * 10. / 12)) {
-			boxColor(renderer, width - height / 12+ height / 1000 + 1, (mouse.Y / (height / 12)) * height / 12+ height / 1000 + 1, width, (mouse.Y / (height / 12) + 1) * height / 12- height / 1000 - 1, 0x22FFFFFF);
+		if (mouse.X >= (width -height / 12) && mouse.Y >= (height / 12.) && mouse.Y < (height * 10 / 12)) {
+			boxColor(renderer, width - height / 12+ height / 1000 + 1, (int)(mouse.Y / (height / 12.)) * height / 12+ height / 1000 + 1, width, (int)(mouse.Y / (height / 12.) + 1) * height / 12- height / 1000 - 1, 0x22FFFFFF);
 		}
 		else if (choose) {
 			if (mouse.X > (width - height / 12) / wnum / 2 && mouse.X<(width - height / 12 - (width - height / 12) / wnum / 2) && mouse.Y >(height / 12 + ((height - height / 12) / hnum) / 2) && mouse.Y < (height - ((height - height / 12) / hnum) / 2)) {
@@ -173,7 +191,6 @@ int addBuild(SDL_Renderer* renderer, const WindowData& fullViewport, const Mouse
 			}
 		}
 	}
-	return 0;
 }
 
 void buildRender(SDL_Renderer* renderer, const WindowData& fullViewport, Building** build, ImageData build_pic[]) {

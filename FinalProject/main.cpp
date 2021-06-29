@@ -12,7 +12,7 @@
 #include "House.h"
 #include "Event.h"
 
-void InitialLevel(int, WindowData&, ValueData&, CarData*, EventData&, ImageData*);
+void InitialLevel(int, WindowData&, ValueData&, CarData**, EventData*, ImageData*, InciData&);
 
 SDL_Window* window = NULL; // The window we'll be rendering to
 SDL_Renderer* renderer = NULL; // The window rendererint initSDL()
@@ -52,6 +52,10 @@ int main(int argc, char* args[])
 
 	
 	//load images
+	char season_pic_path[4][100] = { "../images/spring.png", "../images/summer.png","../images/autumn.png","../images/snow.png" };
+	ImageData season_pic[4];
+	for (int i = 0; i < 4; i++)
+		season_pic[i] = loadImgTexture(renderer, season_pic_path[i], 1, 1, 1);
 	char control_pic_path[3][100] = { "../images/pop_value.png", "../images/money_value.png","../images/love_value.png" };
 	ImageData control_pic[3];
 	for(int i=0; i<3; i++)
@@ -76,10 +80,10 @@ int main(int argc, char* args[])
 	ImageData event_pic[6];
 	for (int i = 0; i < 6; i++)
 		event_pic[i] = loadImgTexture(renderer, event_pic_path[i], 1, 1, 1);
-
-	CarData car[CARNUM];
-	int next_inci, inci=0, inci_alpha=0, path_length;
-	EventData event;
+	static ImageData inci_pic = loadImgTexture(renderer, (char*)"../images/incident.png", 1, 1, 1);
+	CarData *car=NULL;
+	InciData inci;
+	EventData event[3];
 
 	
 	SDL_TimerID timerID_clock;
@@ -120,38 +124,28 @@ int main(int argc, char* args[])
 		if (value.level) {
 			flag = true;
 
-			if (next_inci || inci) {
-				if (next_inci) {
-					inci = next_inci;
-					inci_alpha = 450;
-					timerID_incident = SDL_AddTimer(50, incident_add, &inci_alpha);
-				}
-				else if (inci && (!inci_alpha))
-					inci = 0;
-			}
-
 			//draw screen
 			mapRender(renderer, fullViewport, road_pic, road_pic1);
 			buildRender(renderer, fullViewport, build, build_pic);
-			next_inci=eventRender(renderer, fullViewport, event, car, cloud_pic, build, value);
+			eventRender(renderer, fullViewport, event, car, cloud_pic, build, value, inci);
 			carRender(renderer, fullViewport, car, car_pic, cloud_pic);
-			incident(renderer, fullViewport, windowChange, inci, inci_alpha);
-			controlRender(renderer, fullViewport, windowChange, mouse, pause, value, control_pic, build_pic, flag_pic);
-
+			incident(renderer, fullViewport, windowChange, inci, inci_pic);
+			controlRender(renderer, fullViewport, windowChange, mouse, pause, value, control_pic, build_pic, flag_pic, season_pic);
 			//add things
-			next_inci += addCar(renderer, fullViewport, mouse, pause, event, build, car, car_pic);
-			next_inci += addBuild(renderer, fullViewport, mouse, value.money, build, build_pic, car);
-			
+			addCar(renderer, fullViewport, mouse, pause, event, build, car, car_pic, inci);
+			addBuild(renderer, fullViewport, mouse, value.money, build, build_pic, car, inci);
 			switch (pause) {
 			case 1:
 				pause = 2;
 				SDL_RemoveTimer(timerID_clock);
+				SDL_RemoveTimer(timerID_incident);
 				SDL_RemoveTimer(timerID_car);
 				SDL_RemoveTimer(timerID_event);
 				break;
 			case 3:
 				pause = 0;
 				timerID_clock = SDL_AddTimer(10, clock_add, &value);
+				timerID_incident = SDL_AddTimer(60, incident_add, &inci);
 				timerID_car = SDL_AddTimer(10, car_move, car);
 				timerID_event = SDL_AddTimer(1000, event_change, &event);
 				break;
@@ -162,12 +156,15 @@ int main(int argc, char* args[])
 				value.level = 0;
 				pause = 0;
 				SDL_RemoveTimer(timerID_clock);
+				SDL_RemoveTimer(timerID_incident);
 				SDL_RemoveTimer(timerID_car);
 				SDL_RemoveTimer(timerID_event);
-				car_move(NULL, (void*)car);
+				car_move(NULL, car);
+				addBuild(NULL, fullViewport, mouse, value.money, build, build_pic, car, inci);
+				controlRender(renderer, fullViewport, windowChange, mouse, pause, value, NULL,NULL,flag_pic, season_pic);
 				createBuilding(build, fullViewport, road, 0);
 				createRandomMap(fullViewport, road, 0);
-				InitialLevel(value.level, fullViewport, value, car, event, event_pic);
+				InitialLevel(value.level, fullViewport, value, &car, event, event_pic, inci);
 				break;
 			}
 		}
@@ -176,11 +173,9 @@ int main(int argc, char* args[])
 				quit = true;
 			}
 			if (value.level) {
-				inci = 0, inci_alpha = 0;
-				InitialLevel(value.level, fullViewport, value, car, event, event_pic);
-				next_inci = event.type + 6;
+				InitialLevel(value.level, fullViewport, value, &car, event, event_pic, inci);
 				timerID_clock = SDL_AddTimer(10, clock_add, &value);
-				timerID_incident;
+				timerID_incident= SDL_AddTimer(60, incident_add, &inci);
 				timerID_car = SDL_AddTimer(10, car_move, car);
 				timerID_event = SDL_AddTimer(1000, event_change, &event);
 			}
@@ -190,10 +185,11 @@ int main(int argc, char* args[])
 		SDL_RenderPresent(renderer);
 	}	
 
+	//free up resource
+	menuRender(NULL, fullViewport, windowChange, mouse, value);
 	if (flag) {
-		incident(NULL, fullViewport, windowChange, inci, inci_alpha);
 		mapRender(NULL, fullViewport, road_pic, road_pic1);
-		controlRender(NULL, fullViewport, windowChange, mouse, pause, value, control_pic, build_pic, flag_pic);
+		controlRender(NULL, fullViewport, windowChange, mouse, pause, value, control_pic, build_pic, flag_pic, season_pic);
 		buildRender(NULL, fullViewport, build, build_pic);
 	}
 	closeSDL(window, renderer);
@@ -201,7 +197,7 @@ int main(int argc, char* args[])
 	return 0;
 }
 
-void InitialLevel(int level, WindowData& fullViewport, ValueData& value, CarData car[], EventData& event, ImageData event_pic[]) {
+void InitialLevel(int level, WindowData& fullViewport, ValueData& value, CarData** car, EventData* event, ImageData event_pic[], InciData& inci) {
 	fullViewport.oldh = fullViewport.oldw = 1;
 	value.level = level;
 	switch (level) {
@@ -212,8 +208,9 @@ void InitialLevel(int level, WindowData& fullViewport, ValueData& value, CarData
 	case 2:
 	case 3:
 		fullViewport.hnum = 3 + 3 * level, fullViewport.wnum = 5 + 3 * level;
+		fullViewport.carnum = fullViewport.hnum * fullViewport.wnum *2/3;
 		//initial value
-		value.time = 0, value.season = rand() % 4, value.population = 35 * value.level, value.money = 0;
+		value.time = 0, value.season = rand() % 4, value.population = 35 * value.level, value.money = 0, value.love=0;
 		createRandomMap(fullViewport, road, fullViewport.hnum*fullViewport.wnum*0.85);
 		destroyRoad(road, fullViewport.hnum, fullViewport.wnum);
 		createBuilding(build, fullViewport, road, fullViewport.hnum * fullViewport.wnum /4);
@@ -222,7 +219,12 @@ void InitialLevel(int level, WindowData& fullViewport, ValueData& value, CarData
 			destroyRoad(road, fullViewport.hnum, fullViewport.hnum * fullViewport.wnum * 0.85);
 			createBuilding(build, fullViewport, road, fullViewport.hnum * fullViewport.wnum/3);
 		}
-		createEvent(event, fullViewport, event_pic, build, &value, car);
+		inci.addhouse = inci.addcar = inci.car1 = inci.car2 = inci.car3 = 0;
+		for (int i = 0; i < 5; i++)
+			inci.alpha[i] = 0;
+		for(int i=0; i<value.level; i++)
+			createEvent(event[i], fullViewport, event_pic, build, &value, *car, inci, i);
+
 		break;
 	}
 }

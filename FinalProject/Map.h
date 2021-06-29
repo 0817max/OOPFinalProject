@@ -164,11 +164,18 @@ void createRandomMap(WindowData& fullViewport, int** &road, int length) {
 		road = NULL;
 		return;
 	}
-	road = new int* [hnum];
-	for (int i = 0; i < hnum; i++) {
-		road[i] = new int[wnum];
-		for (int j = 0; j < wnum; j++)
-			road[i][j] = 0;
+	if (road == NULL) {
+		road = new int* [hnum];
+		for (int i = 0; i < hnum; i++) {
+			road[i] = new int[wnum];
+			for (int j = 0; j < wnum; j++)
+				road[i][j] = 0;
+		}
+	}
+	else {
+		for (int i = 0; i < hnum; i++)
+			for (int j = 0; j < wnum; j++)
+				road[i][j] = 0;
 	}
 	
 	//random start point

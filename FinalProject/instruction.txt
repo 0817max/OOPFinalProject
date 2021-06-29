@@ -1,12 +1,36 @@
 Instruction
 
 I.How to play?
-	
+	Build a house:
+		Click the symbol of the house on your right to pick the type of the house you want to build.
+		Then, move your mouse to the place where you want to build the house and left-click it.
+		At last, right-click to give up building more houses.
+
+		(Notice: The house can only be built at the place next to a road.)
+
+	Assign task:
+		Click the symbol of small flag on your right to show the type of car you can assign.
+		Then, select the type of the car you want to assign and left-click its symbol.
+		At last, move your mouse to the place where you want the car to arrive at and left-click the position.
+
+		(Notice: The car will not automatically go back to its origin (the special house that correspond to the car).)
+		(Notice: If you want to complete the mission, assign the corresponding car to the position of the symbol of the event.)
+
 
 II.Victory:
 	Level 1:
+		happiness  : 1000
+		    money  :  500
+	    	population :   70
 	Level 2:
+		happiness  : 2000
+		    money  : 1000
+	    	population :  140
 	Level 3:
+		happiness  : 3000
+		    money  : 1500
+	    	population :  210
 
-III.Game over:
+III.Failure:
+	population decreases to 0.
 	

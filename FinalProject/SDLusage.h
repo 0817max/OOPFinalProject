@@ -20,6 +20,7 @@ struct TextData
 struct WindowData {
 	int w, h, wnum, hnum;
 	int oldw, oldh;
+	int carnum;
 };
 
 enum MouseState
@@ -74,16 +75,16 @@ struct CarData
 struct ValueData
 {
 	int time;
-	unsigned int level:3;
-	unsigned int season:2;
+	int level;
+	int season;
 	int population;
 	int love;
 	int money;
 };
 
 struct EventData {
-	int season;	//	0:spring	1:summer	2:fall	3:winter
-	int level;
+	int* season;	//	0:spring	1:summer	2:fall	3:winter
+	int* level;
 	ValueData* value;
 	double x, y;
 	bool exist;
@@ -93,6 +94,16 @@ struct EventData {
 	int h;//horizontal
 	CarData* car;
 	WindowData fullViewport;
+};
+
+struct InciData
+{
+	unsigned int addhouse:2;
+	unsigned int addcar:2;
+	unsigned int car1 : 3;
+	unsigned int car2 : 3;
+	unsigned int car3 : 3;
+	int alpha[5];
 };
 
 const int SOLID = 100;
