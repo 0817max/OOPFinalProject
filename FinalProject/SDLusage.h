@@ -53,7 +53,7 @@ enum PosPoint {
 enum BuildType { Empty = 0, FireSta = 1, Logistics = 2, PoliceOff = 3, Factory = 4, Shopping = 5, School = 6, Hospital = 7, House1 = 8, House2=9 };
 struct Building {
 	BuildType type;
-	int x, y;
+	int x:16, y:16;
 	PosPoint Pos;
 };
 
@@ -88,12 +88,10 @@ struct EventData {
 	ValueData* value;
 	double x, y;
 	bool exist;
-	int type;	//	0:fire	1:car accident	2:road closure	3:delivery	4:thief	5:lightening	6:no event
-	ImageData* img;
-	int time; //time start from the event created
-	int h;//horizontal
+	int type:4;	//	0:fire	1:car accident	2:road closure	3:delivery	4:thief	5:lightening	6:no event
+	int time:28; //time start from the event created
+	bool h;//horizontal
 	CarData* car;
-	WindowData fullViewport;
 };
 
 struct InciData
@@ -118,7 +116,7 @@ SDL_RendererFlip hove = (SDL_RendererFlip)(SDL_FLIP_HORIZONTAL | SDL_FLIP_VERTIC
 
 int initSDL(SDL_Window*& window, SDL_Renderer*& renderer) {
 	// Initialize SDL	
-	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) != 0)
+	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_TIMER) != 0)
 	{
 		// Error Handling		
 		printf("SDL_Init failed: %s\n", SDL_GetError());
@@ -151,7 +149,12 @@ int initSDL(SDL_Window*& window, SDL_Renderer*& renderer) {
 		printf("SDL_ttf could not initialize! SDL_ttf Error: %s\n", TTF_GetError());
 		return 4;
 	}
-
+	// Initialize SDL_mixer
+	if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 8, 2048) < 0)
+	{
+		printf("SDL_mixer could not initialize! SDL_mixer Error: %s\n", Mix_GetError());
+		return 5;
+	}
 	// Create renderer
 	renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
 	if (renderer == NULL)
@@ -159,7 +162,7 @@ int initSDL(SDL_Window*& window, SDL_Renderer*& renderer) {
 		SDL_DestroyWindow(window);
 		printf("SDL_CreateRenderer failed: %s\n", SDL_GetError());
 		SDL_Quit();
-		return 5;
+		return 6;
 	}
 
 	return 0;
@@ -178,7 +181,7 @@ void closeSDL(SDL_Window*& window, SDL_Renderer*& renderer)
 	// Shutdown and cleanup the truetype font API.
 	// https://www.libsdl.org/projects/SDL_ttf/docs/SDL_ttf_frame.html
 	TTF_Quit();
-
+	Mix_Quit();
 	SDL_Quit();
 }
 

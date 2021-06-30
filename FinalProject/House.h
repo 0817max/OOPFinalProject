@@ -28,9 +28,9 @@ void createBuilding(Building **&build, const WindowData& fullViewport, int** roa
 		i = rand() % hnum;
 		j = rand() % wnum;
 		if (build[i][j].type == Empty && checkRoad(i, j)) {
-			if (c < 8)
+			if (c < 4)
 				build[i][j].type = (BuildType)c;
-			else if (c >= 8)
+			else if (c >= 4)
 				build[i][j].type = (c%2)?House1:House2;
 			c++;
 		}

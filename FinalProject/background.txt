@@ -1,74 +1,107 @@
 Background
-	Welcome, player!
-	Here, you crown the city.
-	You can build several houses you want, BUT REMEMBER to complete the missions.
-	Push yourself to your very best and try to make your city great again.
-	Good Luck,and you’ll need it.
+  Welcome, player!
+  Here, you crown the city.
+  You can build several houses you want, BUT REMEMBER to complete the missions.
+  Push yourself to your very best and try to make your city great again.
+  Good Luck, and you'll need it.
 
 Introduction
-	I.Resource:
-		A.Population:
-			Population has a strong connection with Money and Happiness.
-			Population will increase over time.
-			If a mission is left aside for a period, it will bring about some certain death or moving away.
-			A mission failed will lead to a Population loss.
-			
-		B.Money:
-			Money is mainly for building different buildings.
-			Money will increase over time.
-			If the mission is left aside for a period of time, your city will be fined.
-			A mission failed will lead to some considerate penalty.
-			
-		C.Happiness:
-			Happiness is the measurement of how content and satisfied the people in your city are. 
-			Happiness will increase over time until it achieves an amount.
-			You can earn more Happiness by completing missions in time.
-			If the mission is left aside for a period, it will cut down on Happiness. 
-			A mission failed will lead to a Happiness decreasing.
+  I.Resource:
+    A.Population:
+      Population has a strong connection with Money and Happiness.
+      Population will increase over time.
+      If the mission is left aside for a period, it will bring about some certain death or moving away.
+      A mission failed will lead to a Population loss.
 
-			
-	II.House:
-		A.Normal House(cost 150 Money per building)
-		B.Special House(cost 200 Money per building)
-			a.Fire Station
-				Having a Fire Station, you can assign a firefighter of dealing with the event "Fire" and "Lightening". 
-			b.Courier Company
-				Having a Courier Company, you can assign a truck of dealing with the event "Delivery Service". 
-			c.Police Station
-				Having a Police Station, you can assign a police officer of dealing with the event "Car Accident","Road Closure",and "Theft". 
-			d.Factory
-			e.Supermarket
-			f.School
-			g.Hospital
-		
-	III.Mission System:
-		A.Car:
-			a.Fire Truck
-			b.Chemical Truck
-			c.Truck
-			d.Police Car
-		B.Season:
-			a.Spring
-				less "Fire" and more "Lightening"
-			b.Summer
-				more "Fire"
-			c.Autumn
-				general
-			d.Winter
-				less "Fire" and more "Car Accident" and "Road Closure"
-		C.Event:
-			a.Fire
-				If a normal house is on fire, use "Fire Truck" to put out fire.
-				If a special house is on fire, use "Chemical Truck" to put out fire.
-			b.Car Accident
-				Assign "Police Car" the task.
-			c.Road Closure
-				Assign "Police Car" the task.
-			d.Delivery Service
-				Assign "Truck" the task.
-			e.Theft
-				Assign "Police Car" the task of catching the thief.
-			f.Lightening
-				Assign "Fire Truck" the task.
+    B.Money:
+      Money is mainly for building different buildings.
+      Money will increase over time.
+      If the mission is left aside for a period of time, your city will be fined.
+      A mission failed will lead to some considerate penalty.
 
+    C.Happiness:
+      Happiness is the measurement of how content and satisfied the people in your city are.
+      Happiness will increase over time until it achieves a restricted number.
+      You can earn more Happiness by completing missions in time.
+      If the mission is left aside for a period, it will cut down on Happiness. 
+      A mission failed will lead to a Happiness decreasing.
 
+  II.House:
+    A.Normal House(cost 150 Money per building)
+    B.Special House
+      a.Fire Station(cost 200 Money per building)
+        Having a Fire Station, you can assign a firefighter of dealing with the event "Fire" and "Lightening". 
+      b.Courier Company(cost 200 Money per building)
+        Having a Courier Company, you can assign a truck of dealing with the event "Delivery Service". 
+      c.Police Station(cost 200 Money per building)
+        Having a Police Station, you can assign a police officer of dealing with the event "Car Accident", "Road Closure", and "Theft".
+      d.Factory(cost 150 Money & 100 Happiness per building)
+        Each Factory can change 1 Happiness into 5*(number of level) Money per second. 
+      e.Shopping Mall(cost 300 Money per building)
+        Each Shopping Mall can earn (number of level) Money every 2 second.
+      f.School(cost 350 Money per building)
+        Having a School,you can earn 2*(number of level) Happiness every 10 seconds.
+      g.Hospital(cost 400 Money & 25 Happiness per building)
+        Each Hospital can earn 5*(number of level) People every 5 seconds.
+
+  III.Mission System:
+    A.Car:
+      a.Fire Truck
+      b.Chemical Truck
+      c.Truck
+      d.Police Car
+    B.Season:
+      a.Spring
+        less "Fire" and more "Lightening"
+      b.Summer
+        more "Fire"
+      c.Autumn
+        general
+      d.Winter
+        less "Fire" and more "Car Accident" and "Road Closure"
+    C.Event:
+      a.Fire
+        If a normal house is on fire, use "Fire Truck" to put out fire.
+        If a special house is on fire, use "Chemical Truck" to put out fire.
+      b.Car Accident
+        Assign "Police Car" the task.
+      c.Road Closure
+        Assign "Police Car" the task.
+      d.Delivery Service
+        Assign "Truck" the task.
+      e.Theft
+        Assign "Police Car" the task of catching the thief.
+      f.Lightening
+        Assign "Fire Truck" the task.
+
+Instruction
+  I.How to play?
+    Build a house:
+      Click the symbol of the house on your right to pick the type of the house you want to build.
+      Then, move your mouse to the place where you want to build the house and left-click it.
+      At last, right-click to give up building more houses.
+    (Notice: The house can only be built at the place next to a road.)
+
+    Assign a task:
+      Click the symbol of small flag on your right to show the type of car you can assign.
+      Then, select the type of the car you want to assign and left-click its symbol.
+      At last, move your mouse to the place where you want the car to arrive at and left-click the position.
+    (Notice: The car will not automatically go back to its origin (the special house that correspond to the car).)
+    (Notice: If you want to complete the mission, assign the corresponding car to the position of the symbol of the event.)
+
+  II.Victory:
+    Level 1:
+      happiness:1000
+      money:1000
+      population:100
+    Level 2:
+      happiness:2000
+      money:2000
+      population:300
+    Level 3:
+      happiness:3000
+      money:4000
+      population:500
+
+  III.Failure:
+    Population decreases to 0.

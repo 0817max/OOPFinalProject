@@ -1,4 +1,4 @@
-void createEvent(EventData& e, WindowData& fullViewport, ImageData event_pic[], Building**& build, ValueData* value, CarData car[], InciData& inci, int carnum) {
+void createEvent(EventData& e, WindowData& fullViewport, Building**& build, ValueData* value, CarData car[], InciData& inci, int carnum) {
 	
 	e.level = &(value->level), e.season = &(value->season);
 	e.car = car;
@@ -173,7 +173,6 @@ void createEvent(EventData& e, WindowData& fullViewport, ImageData event_pic[], 
 	//e.exist = true;
 	//e.type = rand()%6;
 	e.time = 0;
-	e.img = event_pic;
 	int hnum = fullViewport.hnum - 1, wnum = fullViewport.wnum - 1;
 	if ((e.type == 0) || (e.type == 3) || (e.type == 4) || (e.type == 5)) {
 		do {
@@ -379,8 +378,7 @@ void LighteningRender(SDL_Renderer* renderer, WindowData& fullViewport, EventDat
 		imgRender(renderer, cloud_pic[1], Middle, e.x* (width - height / 12) / (wnum + 1), e.y* (height - height / 12) / (hnum + 1)+height/12, fmin((width - height / 12) / (wnum + 1) * 8 / 10, (height - height / 12) / (hnum + 1) * 4 / 6 * cloud_pic[1].width / cloud_pic[1].height), NULL, 1, NULL, NULL, 0, no, -e.time);
 }
 
-Uint32 event_change(Uint32 interval, void* param)
-{
+Uint32 event_change(Uint32 interval, void* param){
 	EventData* e = (EventData*)param;
 	for (int i = 0; i < *(e[0].level); i++) {
 		if (e[i].exist == false) {
@@ -494,7 +492,7 @@ Uint32 event_change(Uint32 interval, void* param)
 	return interval;
 }
 
-void eventRender(SDL_Renderer* renderer, WindowData& fullViewport, EventData* e, CarData car[], ImageData cloud_pic[], Building **build, ValueData &value, InciData& inci) {
+void eventRender(SDL_Renderer* renderer, WindowData& fullViewport, EventData* e, CarData car[], ImageData cloud_pic[], Building **build, ValueData &value, InciData& inci, ImageData event_pic[]) {
 	int width = fullViewport.w, height = fullViewport.h, hnum = fullViewport.hnum, wnum = fullViewport.wnum, carnum = fullViewport.carnum;
 	void (*f1[6])(SDL_Renderer *,WindowData&, EventData&, ImageData*) = { FireRender,CarAccidentRender,RoadClosureRender,DeliveryRender,ThiefRender,LighteningRender};
 	void (*f2[6])(EventData&, ValueData&) = { Fire,CarAccident,RoadClosure,Delivery,Thief,Lightening };
@@ -503,7 +501,7 @@ void eventRender(SDL_Renderer* renderer, WindowData& fullViewport, EventData* e,
 			if (e[i].time < 0)
 				(*f1[e[i].type])(renderer, fullViewport, e[i], cloud_pic);
 			else {
-				createEvent(e[i], fullViewport, e[i].img, build, &value, car, inci, i);
+				createEvent(e[i], fullViewport, build, &value, car, inci, i);
 			}
 		}
 		else {
@@ -542,11 +540,10 @@ void eventRender(SDL_Renderer* renderer, WindowData& fullViewport, EventData* e,
 					break;
 				}
 			}
-			if (e[i].img != NULL)
-				if (e[i].type == 1 || e[i].type == 2)
-					imgRender(renderer, e[i].img[e[i].type], Middle, e[i].x * (width - height / 12) / wnum, e[i].y * (height - height / 12) / hnum + height / 12, fmin((width - height / 12) / wnum / 4, (height - height / 12) / hnum / 2 * e[i].img[e[i].type].width / e[i].img[e[i].type].height), NULL, 1, NULL, NULL, 0, no, 255);
-				else
-					imgRender(renderer, e[i].img[e[i].type], Middle, e[i].x * (width - height / 12) / wnum, e[i].y * (height - height / 12) / hnum + height / 12, fmin((width - height / 12) / wnum * 4 / 5, (height - height / 12) / hnum * 2 / 3 * e[i].img[e[i].type].width / e[i].img[e[i].type].height), NULL, 1, NULL, NULL, 0, no, 255);
+			if (e[i].type == 1 || e[i].type == 2)
+				imgRender(renderer, event_pic[e[i].type], Middle, e[i].x * (width - height / 12) / wnum, e[i].y * (height - height / 12) / hnum + height / 12, fmin((width - height / 12) / wnum / 4, (height - height / 12) / hnum / 2 * event_pic[e[i].type].width / event_pic[e[i].type].height), NULL, 1, NULL, NULL, 0, no, 255);
+			else
+				imgRender(renderer, event_pic[e[i].type], Middle, e[i].x * (width - height / 12) / wnum, e[i].y * (height - height / 12) / hnum + height / 12, fmin((width - height / 12) / wnum * 4 / 5, (height - height / 12) / hnum * 2 / 3 * event_pic[e[i].type].width / event_pic[e[i].type].height), NULL, 1, NULL, NULL, 0, no, 255);
 		}
 	}
 }

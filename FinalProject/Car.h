@@ -434,13 +434,17 @@ Uint32 car_move(Uint32 interval, void* param)
 	//create the intersect for car (divide into four piece: 0:lefttop 1:righttop 2:rightbottom 3:leftbottom)
 	static char*** CarIntersect = NULL;
 	if (interval == NULL) {
-		for (int i = 0; i < hnum; i++) {
-			for (int j = 0; j < wnum; j++)
-				delete[]CarIntersect[i][j];
-			delete[]CarIntersect[i];
+		if (CarIntersect) {
+			for (int i = 0; i < hnum; i++) {
+				for (int j = 0; j < wnum; j++)
+					if (CarIntersect[i][j])
+						delete[]CarIntersect[i][j];
+				if (CarIntersect[i])
+					delete[]CarIntersect[i];
+			}
+			delete[]CarIntersect;
+			CarIntersect = NULL;
 		}
-		delete[]CarIntersect;
-		CarIntersect = NULL;
 		for (int i = 0; i < carnum; i++) {
 			if (t[i].path) {
 				delete t[i].path;
@@ -449,7 +453,6 @@ Uint32 car_move(Uint32 interval, void* param)
 		}
 		delete[]t;
 		return 0;
-		
 	}
 	if (CarIntersect == NULL) {
 		CarIntersect = new char** [hnum];
