@@ -1,12 +1,13 @@
 #include<limits.h>
 
 
-int carMenu(SDL_Renderer* renderer, const WindowData& fullViewport, const Mouse& mouse, int& choose, ImageData car_pic[]);
+int carMenu(SDL_Renderer* renderer, const WindowData& fullViewport, bool windowChange, const Mouse& mouse, int& choose, ImageData car_pic[], CarData car[]);
 void bestRoute(const WindowData& fullViewport, double** distance, int y, int x, int direction);
 bool existDirection(int hnum, int wnum, int y, int x, int direction);
 char* createPath(const WindowData& fullViewport, double start_y, double start_x, bool intersect, double end_ynum, double end_xnum, bool house_point, int& length);
 void fillIntersect(char* intersect, int direction1, int direction2, int num);
 bool equalIntersect(char* intersect, int direction1, int direction2, int num);
+int carNum(CarData car[], int carnum, int type);
 
 void createCar(CarData& car, WindowData& fullViewport, double house_hnum, double house_wnum, bool house_point, int type, ImageData car_pic[]) {
 	int width = fullViewport.w, height = fullViewport.h, wnum = fullViewport.wnum, hnum = fullViewport.hnum, oldw=fullViewport.oldw, oldh=fullViewport.oldh;
@@ -171,11 +172,22 @@ void createCar(CarData& car, WindowData& fullViewport, double house_hnum, double
 	car.intersect = false;
 }
 
-void addCar(SDL_Renderer* renderer, WindowData& fullViewport, const Mouse& mouse, char& pause, const EventData event[], Building**& build , CarData car[], ImageData car_pic[], InciData& inci) {
+void addCar(SDL_Renderer* renderer, WindowData& fullViewport,bool windowChange, const Mouse& mouse, char& pause, const EventData event[], Building**& build , CarData car[], ImageData car_pic[], InciData& inci) {
 	int width = fullViewport.w, height = fullViewport.h, wnum = fullViewport.wnum, hnum = fullViewport.hnum, xnum, ynum, carnum = fullViewport.carnum;
 	static int choose = 0, select=0;
-	static SDL_TimerID timerID_clock;
 	double x, y;
+	static bool flag = false;
+	if (renderer == NULL) {
+		if(flag)
+			carMenu(NULL, fullViewport, windowChange, mouse, choose, car_pic, car);
+		flag = false;
+		choose = select = 0;
+		return;
+	}
+
+	if (select) {
+		flag = true;
+	}
 		
 	//Right Click for releaing choose
 	if (mouse.state == IN_RB_SC) {
@@ -206,8 +218,10 @@ void addCar(SDL_Renderer* renderer, WindowData& fullViewport, const Mouse& mouse
 				int min_num = -1;
 				min.length = INT_MAX;
 				//search for stopping special car
+				bool flag = false;
 				for (int i = 0; i < carnum; i++)
 					if (car[i].type == choose && car[i].velocity < 0) {
+						flag = true;
 						if (!car[i].path)
 							delete[](car[i].path);
 						t = car[i];
@@ -220,9 +234,13 @@ void addCar(SDL_Renderer* renderer, WindowData& fullViewport, const Mouse& mouse
 						else
 							delete t.path;
 					}
-				//there is no car
 				if (min_num == -1) {
-					inci.addcar=2;
+					//there is no way
+					if (flag)
+						inci.addcar = 3;
+					//there is no car
+					else
+						inci.addcar = 2;
 					inci.alpha[1] = 450;
 					return;
 				}
@@ -285,8 +303,9 @@ void addCar(SDL_Renderer* renderer, WindowData& fullViewport, const Mouse& mouse
 			}
 		}
 	}
-	else if (mouse.X > (width - height / 12) && mouse.Y > (height * 10 / 12) && mouse.Y <= (height * 12 / 12))
-		boxColor(renderer, (width - height / 12)+ height / 1000 + 1, (height * 10 / 12)+ height / 1000 + 1, width, height, 0x22FFFFFF);
+	else if (mouse.X > (width - height / 12) && mouse.Y > (height * 10 / 12) && mouse.Y <= (height * 12 / 12)) {
+		boxColor(renderer, (width - height / 12) + height / 1000 + 1, (height * 10 / 12) + height / 1000 + 1, width, height, 0x22FFFFFF);
+	}
 	else if (choose) {
 		int special = 0;
 		x = (double)mouse.X / ((width - height / 12) / wnum);
@@ -316,7 +335,7 @@ void addCar(SDL_Renderer* renderer, WindowData& fullViewport, const Mouse& mouse
 	if (select) {
 		if (pause == 0)
 			pause = 1;
-		if (!carMenu(renderer, fullViewport, mouse, choose, car_pic)) {	//false for quit
+		if (!carMenu(renderer, fullViewport, windowChange,mouse, choose, car_pic, car)) {	//false for quit
 			select = 0;
 			if (pause == 2)
 				pause = 3;
@@ -341,13 +360,55 @@ void addCar(SDL_Renderer* renderer, WindowData& fullViewport, const Mouse& mouse
 	
 }
 
-int carMenu(SDL_Renderer* renderer, const WindowData& fullViewport, const Mouse& mouse, int& choose, ImageData car_pic[]) {
+int carMenu(SDL_Renderer* renderer, const WindowData& fullViewport, bool windowChange, const Mouse& mouse, int& choose, ImageData car_pic[], CarData car[]) {
 	int width = fullViewport.w, height = fullViewport.h;
-	boxColor(renderer, 0, height / 12 + height / 1000 + 1, width - height/ 12 - height / 1000 - 1, height, 0xBB000000);
+	static int oldcarnum[4] = { -1, -1, -1, -1 };
+	int type_carnum;
+	static TextData number_text[4];
+	char num[4];
+	if (renderer == NULL) {
+		oldcarnum[0] = -1;
+		for (int i = 0; i < 4; i++)
+			SDL_DestroyTexture(number_text[i].texture);
+		return 0;
+	}
+	if (oldcarnum[0] == -1) {
+		for (int i = 0; i < 4; i++) {
+			oldcarnum[i] = carNum(car, fullViewport.carnum, i + 1);
+			sprintf_s(num, 4, "%d", oldcarnum[i]);
+			number_text[i] = loadTextTexture(renderer, num, "../fonts/TaipeiSansTCBeta-Regular.ttf", height / 12, 255, 255, 255, BLENDED);
+		}
+	}
+	else if (windowChange) {
+		for (int i = 0; i < 4; i++) {
+			oldcarnum[i] = carNum(car, fullViewport.carnum, i + 1);
+			SDL_DestroyTexture(number_text[i].texture);
+			sprintf_s(num, 4, "%d", oldcarnum[i]);
+			number_text[i] = loadTextTexture(renderer, num, "../fonts/TaipeiSansTCBeta-Regular.ttf", height/ 12, 255, 255, 255, BLENDED);
+		}
+	}
+	else{
+		for (int i = 0; i < 4; i++) {
+			type_carnum = carNum(car, fullViewport.carnum, i + 1);
+			if (type_carnum != oldcarnum[i]) {
+				SDL_DestroyTexture(number_text[i].texture);
+				sprintf_s(num, 4, "%d", type_carnum);
+				number_text[i] = loadTextTexture(renderer, num, "../fonts/TaipeiSansTCBeta-Regular.ttf", height / 12, 255, 255, 255, BLENDED);
+				oldcarnum[i] = type_carnum;
+			}
+		}
+	}
+
+	boxColor(renderer, 0, height / 12 + height / 1000 + 1, width - height / 12 - height / 1000 - 1, height, 0xBB000000);
 	imgRender(renderer, car_pic[0], RightBottom, width / 2 - 10, height / 2 - 10, NULL, height / 3, 1, NULL, NULL, 0, no, 250);
 	imgRender(renderer, car_pic[1], LeftBottom, width / 2 + 10, height / 2 - 10, NULL, height / 3, 1, NULL, NULL, 0, no, 250);
 	imgRender(renderer, car_pic[2], RightTop, width / 2 - 10, height / 2 + 10, NULL, height / 3, 1, NULL, NULL, 0, no, 250);
 	imgRender(renderer, car_pic[3], LeftTop, width / 2 + 10, height / 2 + 10, NULL, height / 3, 1, NULL, NULL, 0, no, 250);
+
+	textRender(renderer, number_text[0], Right, width / 2 - 10 - height / 3 * car_pic[0].width / car_pic[0].height, height / 2 - 10 - height / 6, no, 255);
+	textRender(renderer, number_text[1], Left, width / 2 + 10 + height / 3 * car_pic[1].width / car_pic[1].height, height / 2 - 10 - height / 6, no, 255);
+	textRender(renderer, number_text[2], Right, width / 2 - 10 - height / 3 * car_pic[2].width / car_pic[2].height, height / 2 + 10 + height / 6, no, 255);
+	textRender(renderer, number_text[3], Left, width / 2 + 10 + height / 3 * car_pic[3].width / car_pic[3].height, height / 2 + 10 + height / 6, no, 255);
 
 	//select which car
 	if (mouse.state == IN_LB_SC) {
@@ -393,7 +454,6 @@ int carMenu(SDL_Renderer* renderer, const WindowData& fullViewport, const Mouse&
 			}
 		}
 	}
-
 	//keep in menu
 	return 1;
 }
@@ -425,6 +485,34 @@ void carRender(SDL_Renderer* renderer, const WindowData& fullViewport, CarData c
 		imgRender(renderer, car_pic[car[i].type-1], Left, car[i].x * (width - height / 12) / wnum, car[i].y * (height * 11 / 12) / hnum + (height / 12), fmin((width - height / 12) / wnum / 10., height * 11 / 12 / hnum / 6.), NULL, 1, NULL, NULL, car[i].angle, no, 255);
 	}
 }
+void carRender1(SDL_Renderer* renderer, const WindowData& fullViewport, CarData car[], ImageData car_pic[], ImageData cloud_pic[]) {
+	int width = fullViewport.w, height = fullViewport.h, hnum = fullViewport.hnum, wnum = fullViewport.wnum, carnum = fullViewport.carnum;
+	;
+	for (int i = 0; i < carnum; i++) {
+
+		if (car[i].type >= 5 && car[i].type <= 7) {
+			if (car[i].angle % 180) {
+				if ((road[(int)(car[i].y - 0.5)][(int)(car[i].x - 0.5)] >> 8) % 2 == 0)
+					continue;
+			}
+			else {
+				if ((road[(int)(car[i].y - 0.5)][(int)(car[i].x - 0.5)] >> 4) % 2 == 0)
+					continue;
+			}
+		}
+
+		if (car[i].velocity < 0) {
+			if (!car[i].path) {
+				car[i].velocity = -1;
+				delete[]car[i].path;
+				car[i].path = NULL;
+			}
+			continue;
+		}
+		imgRender(renderer, car_pic[car[i].type - 1], Left, car[i].x * width / wnum, height/8+car[i].y *(height*6/8)/ hnum, fmin(width / wnum / 10., height*6/8 / hnum / 6.), NULL, 1, NULL, NULL, car[i].angle, no, 255);
+	}
+}
+
 
 Uint32 car_move(Uint32 interval, void* param)
 {
@@ -433,18 +521,17 @@ Uint32 car_move(Uint32 interval, void* param)
 	
 	//create the intersect for car (divide into four piece: 0:lefttop 1:righttop 2:rightbottom 3:leftbottom)
 	static char*** CarIntersect = NULL;
-	if (interval == NULL) {
-		if (CarIntersect) {
-			for (int i = 0; i < hnum; i++) {
-				for (int j = 0; j < wnum; j++)
-					if (CarIntersect[i][j])
-						delete[]CarIntersect[i][j];
-				if (CarIntersect[i])
-					delete[]CarIntersect[i];
-			}
-			delete[]CarIntersect;
-			CarIntersect = NULL;
+	if (interval == NULL&&CarIntersect) {
+		for (int i = 0; i < hnum; i++) {
+			for (int j = 0; j < wnum; j++)
+				if (CarIntersect[i][j])
+					delete []CarIntersect[i][j];
+			if (CarIntersect[i])
+				delete[]CarIntersect[i];
 		}
+		delete[]CarIntersect;
+		CarIntersect = NULL;
+		
 		for (int i = 0; i < carnum; i++) {
 			if (t[i].path) {
 				delete t[i].path;
@@ -1203,4 +1290,12 @@ bool equalIntersect(char* intersect, int direction1, int direction2, int num) {
 			return false;
 		else
 			return true;
+}
+
+int carNum(CarData car[], int carnum, int type) {
+	int num=0;
+	for (int i = 0; i < carnum; i++)
+		if (car[i].type == type && car[i].velocity < 0)
+			num++;
+	return num;
 }

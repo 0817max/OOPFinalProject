@@ -80,6 +80,8 @@ struct ValueData
 	int population;
 	int love;
 	int money;
+	int buildnum[9];
+	double speed;
 };
 
 struct EventData {
@@ -92,12 +94,13 @@ struct EventData {
 	int time:28; //time start from the event created
 	bool h;//horizontal
 	CarData* car;
+	bool assign;
 };
 
 struct InciData
 {
-	unsigned int addhouse:2;
-	unsigned int addcar:2;
+	unsigned int addhouse:3;
+	unsigned int addcar:3;
 	unsigned int car1 : 3;
 	unsigned int car2 : 3;
 	unsigned int car3 : 3;
@@ -397,6 +400,7 @@ int textRender(SDL_Renderer* renderer, const TextData& text, const PosPoint& Pos
 	if (SDL_SetTextureBlendMode(text.texture, SDL_BLENDMODE_BLEND) == -1)
 	{
 		printf("SDL_SetTextureBlendMode failed: %s\n", SDL_GetError());
+		textRender(renderer, text,Pos, posX, posY, flip,alpha);
 		return -1;
 	}
 
@@ -478,15 +482,11 @@ void mouseHandleEvent(SDL_Event* e, MouseState* mouseState, int* x, int* y)
 			switch (e->type)
 			{
 				case SDL_MOUSEBUTTONDOWN:
-					if (e->button.state == SDL_PRESSED)
+					if (e->button.button == SDL_BUTTON_LEFT && timediv > 400)
 					{
 						*mouseState = IN_LB_PR;
 					}
-					if (e->button.button == SDL_BUTTON_LEFT && timediv > 800)
-					{
-						*mouseState = IN_LB_PR;
-					}
-					else if (e->button.button == SDL_BUTTON_RIGHT && timediv > 800)
+					else if (e->button.button == SDL_BUTTON_RIGHT && timediv > 400)
 					{
 						*mouseState = IN_RB_PR;
 					}
@@ -498,11 +498,11 @@ void mouseHandleEvent(SDL_Event* e, MouseState* mouseState, int* x, int* y)
 					{
 						*mouseState = IN_RB_DC;
 					}
-					else if (e->button.button == SDL_BUTTON_LEFT && e->button.clicks == 1 && timediv < 900 && timediv > 50)
+					else if (e->button.button == SDL_BUTTON_LEFT && e->button.clicks == 1 && timediv < 800 && timediv > 50)
 					{
 						*mouseState = IN_LB_SC;
 					}
-					else if (e->button.button == SDL_BUTTON_RIGHT && e->button.clicks == 1 && timediv < 900 && timediv > 50)
+					else if (e->button.button == SDL_BUTTON_RIGHT && e->button.clicks == 1 && timediv < 800 && timediv > 50)
 					{
 						*mouseState = IN_RB_SC;
 					}
@@ -513,11 +513,11 @@ void mouseHandleEvent(SDL_Event* e, MouseState* mouseState, int* x, int* y)
 					*mouseState = NONE;
 
 				
-					if (e->button.button == SDL_BUTTON_LEFT && timediv > 800)
+					if (e->button.button == SDL_BUTTON_LEFT && timediv > 400)
 					{
 						*mouseState = IN_LB_PR;
 					}
-					else if (e->button.button == SDL_BUTTON_RIGHT && timediv > 800)
+					else if (e->button.button == SDL_BUTTON_RIGHT && timediv > 400)
 					{
 						*mouseState = IN_RB_PR;
 					}

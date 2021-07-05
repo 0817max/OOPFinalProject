@@ -12,7 +12,11 @@ int initCar(WindowData* fullViewport, CarData** car, Building **build, int rando
 	int carnum = fullViewport->carnum;
 	bool repeat = false;
 	int count = 0, i;
-	*car = new CarData[carnum];
+	if (*car) {
+		delete[](*car);
+		(*car) = NULL;
+	}
+	*car = new CarData[carnum];		
 	for (i = 0; i < carnum; i++) {
 		(*car)[i].x = (*car)[i].y = 0;
 		(*car)[i].window = fullViewport;

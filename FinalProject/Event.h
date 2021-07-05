@@ -1,8 +1,9 @@
-void createEvent(EventData& e, WindowData& fullViewport, Building**& build, ValueData* value, CarData car[], InciData& inci, int carnum) {
+void createEvent(EventData& e, const WindowData& fullViewport, Building**& build, ValueData* value, CarData car[], InciData& inci, int carnum) {
 	
 	e.level = &(value->level), e.season = &(value->season);
 	e.car = car;
 	e.value = value;
+	e.assign=true;
 	int sx, sy;
 	int p, q;
 	int* type = new int[6];
@@ -230,8 +231,23 @@ void createEvent(EventData& e, WindowData& fullViewport, Building**& build, Valu
 	
 }
 void Fire(EventData& e, ValueData& value) {
-	if (e.time <= 16 - *(e.level)) {
-		value.love += 25 +*(e.level) * *(e.level) * 5;
+	int t;
+	switch (*e.level) {
+	case 1:
+		t = 18;
+		break;
+	case 2:
+		t = 25;
+		break;
+	case 3:
+		t = 35;
+		break;
+	default:
+		break;
+	}
+	if (e.time <= t) {
+		value.love += 26 + *(e.level) * *(e.level) * 6 + 125 * *(e.level) / (e.time+1);
+		value.money += *(e.level) * 10;
 		e.time = -510;
 	}
 	else {
@@ -252,8 +268,23 @@ void FireRender(SDL_Renderer* renderer, WindowData& fullViewport, EventData& e, 
 }
 void CarAccident(EventData& e, ValueData& value) {
 	int sx, sy;
-	if (e.time <= 18 - *(e.level)) {
-		value.love += 20 + *(e.level) * *(e.level) * 5;
+	int t;
+	switch (*e.level) {
+	case 1:
+		t = 20;
+		break;
+	case 2:
+		t = 26;
+		break;
+	case 3:
+		t = 36;
+		break;
+	default:
+		break;
+	}
+	if (e.time <= t) {
+		value.love += 25 + *(e.level) * *(e.level) * 6 + 100 * *(e.level) / (e.time+1);
+		value.money += *(e.level) * 10;
 		e.time = -510;
 	}
 	else {
@@ -287,8 +318,23 @@ void CarAccidentRender(SDL_Renderer* renderer, WindowData& fullViewport, EventDa
 
 void RoadClosure(EventData& e, ValueData& value) {
 	int sx, sy;
-	if (e.time <= 18 - (*(e.level))) {
-		value.love += 20 + *(e.level) * *(e.level) * 5;
+	int t;
+	switch (*e.level) {
+	case 1:
+		t = 30;
+		break;
+	case 2:
+		t = 35;
+		break;
+	case 3:
+		t = 45;
+		break;
+	default:
+		break;
+	}
+	if (e.time <= t) {
+		value.love += 20 + *(e.level) * *(e.level) * 5 + 100 * *(e.level) / (e.time+1);
+		value.money += *(e.level) * 10;
 		e.time = -510;
 	}
 	else {
@@ -319,9 +365,23 @@ void RoadClosureRender(SDL_Renderer* renderer, WindowData& fullViewport, EventDa
 
 }
 void Delivery(EventData& e, ValueData& value) {
-	if (e.time <= 25 - (*(e.level))) {
-		value.love += 20 + *(e.level) * *(e.level) * 5;
-		value.money += 10 * *(e.level) * *(e.level);
+	int t;
+	switch (*e.level) {
+	case 1:
+		t = 30;
+		break;
+	case 2:
+		t = 35;
+		break;
+	case 3:
+		t = 45;
+		break;
+	default:
+		break;
+	}
+	if (e.time <= t) {
+		value.love += 20 + *(e.level) * *(e.level) * 5 + 100 * *(e.level) / (e.time+1);
+		value.money += 50 * *(e.level) * *(e.level) + 250 * *(e.level) / (e.time+1);
 		e.time = -510;
 	}
 	else {
@@ -339,8 +399,23 @@ void DeliveryRender(SDL_Renderer* renderer, WindowData& fullViewport, EventData&
 
 }
 void Thief(EventData& e, ValueData& value) {
-	if (e.time <= 16 - (*(e.level))) {
-		value.love += 20 + *(e.level) * *(e.level) * 5;
+	int t;
+	switch (*e.level) {
+	case 1:
+		t = 25;
+		break;
+	case 2:
+		t = 30;
+		break;
+	case 3:
+		t = 40;
+		break;
+	default:
+		break;
+	}
+	if (e.time <= t) {
+		value.love += 25 + *(e.level) * *(e.level) * 5 + 100 * *(e.level) / (e.time+1);
+		value.money += *(e.level) * 10;
 		e.time = -510;
 	}
 	else {
@@ -359,8 +434,23 @@ void ThiefRender(SDL_Renderer* renderer, WindowData& fullViewport, EventData& e,
 }
 
 void Lightening(EventData& e, ValueData& value) {
-	if (e.time <= 16 - (*(e.level))) {
-		value.love += 20 + *(e.level) * *(e.level) * 5;
+	int t;
+	switch (*e.level) {
+	case 1:
+		t = 25;
+		break;
+	case 2:
+		t = 30;
+		break;
+	case 3:
+		t = 40;
+		break;
+	default:
+		break;
+	}
+	if (e.time <= t) {
+		value.love += 25 + *(e.level) * *(e.level) * 6 + 100 * *(e.level) / (e.time+1);
+		value.money += *(e.level) * 10;
 		e.time = -510;
 	}
 	else {
@@ -372,13 +462,14 @@ void Lightening(EventData& e, ValueData& value) {
 }
 void LighteningRender(SDL_Renderer* renderer, WindowData& fullViewport, EventData& e, ImageData cloud_pic[]) {
 	int width = fullViewport.w, height = fullViewport.h, hnum = fullViewport.hnum - 1, wnum = fullViewport.wnum - 1;
-	if (e.time<-255)
-		imgRender(renderer, cloud_pic[0], Middle, e.x * (width - height / 12) / (wnum + 1), e.y * (height - height / 12) / (hnum + 1) + height / 12, fmin((width - height / 12) / (wnum + 1) * 8 / 10, (height - height / 12) / (hnum + 1) * 4 / 6 * cloud_pic[0].width / cloud_pic[0].height), NULL, 1, NULL, NULL, 0, no, -e.time-255);
+	if (e.time < -255)
+		imgRender(renderer, cloud_pic[0], Middle, e.x * (width - height / 12) / (wnum + 1), e.y * (height - height / 12) / (hnum + 1) + height / 12, fmin((width - height / 12) / (wnum + 1) * 8 / 10, (height - height / 12) / (hnum + 1) * 4 / 6 * cloud_pic[0].width / cloud_pic[0].height), NULL, 1, NULL, NULL, 0, no, -e.time - 255);
 	else
-		imgRender(renderer, cloud_pic[1], Middle, e.x* (width - height / 12) / (wnum + 1), e.y* (height - height / 12) / (hnum + 1)+height/12, fmin((width - height / 12) / (wnum + 1) * 8 / 10, (height - height / 12) / (hnum + 1) * 4 / 6 * cloud_pic[1].width / cloud_pic[1].height), NULL, 1, NULL, NULL, 0, no, -e.time);
+		imgRender(renderer, cloud_pic[1], Middle, e.x * (width - height / 12) / (wnum + 1), e.y * (height - height / 12) / (hnum + 1) + height / 12, fmin((width - height / 12) / (wnum + 1) * 8 / 10, (height - height / 12) / (hnum + 1) * 4 / 6 * cloud_pic[1].width / cloud_pic[1].height), NULL, 1, NULL, NULL, 0, no, -e.time);
 }
 
-Uint32 event_change(Uint32 interval, void* param){
+Uint32 event_change(Uint32 interval, void* param)
+{
 	EventData* e = (EventData*)param;
 	for (int i = 0; i < *(e[0].level); i++) {
 		if (e[i].exist == false) {
@@ -389,104 +480,107 @@ Uint32 event_change(Uint32 interval, void* param){
 		}
 		else {
 			e[i].time++;
-			switch (e[i].type) {//Àu¥ý¯Å: 0 -> 4 -> 1 -> 5 -> 3 -> 2
-			case 0:
-				if (e[i].value->money >= 0)
-					e[i].value->money -= 5 * (e[i].time / 15) * *(e[i].level);
-				else {
-					if ((e[i].value->population > 0) && (e[i].value->population >= e[i].time))
-						e[i].value->population -= e[i].time;
+			if (e[i].time >= 5 * *(e[i].level) + *(e[i].level) * *(e[i].level)) {
+				switch (e[i].type) {//Àu¥ý¯Å: 0 -> 1 -> 5 -> 4 -> 3 -> 2
+				case 0:
+					if (e[i].value->money >= 0)
+						e[i].value->money -= 10 * *(e[i].level) * e[i].time / (5 * (4 - *(e[i].level)));
+					else {
+						if ((e[i].value->population > 0) && (e[i].value->population >= e[i].time) && (e[i].time % 5 == 0))
+							e[i].value->population -= e[i].time;
+					}
+					if (e[i].value->love >= 0)
+						e[i].value->love -= 5 * *(e[i].level) * e[i].time / (10 * (4 - *(e[i].level)));
+					else {
+						if ((e[i].value->population > 0) && (e[i].value->population >= e[i].time) && (e[i].time % 5 == 0))
+							e[i].value->population -= e[i].time;
+					}
+					if ((e[i].value->population > 0) && (e[i].value->population >= *(e[i].level) * e[i].time / (10 * (4 - *(e[i].level)))))
+						e[i].value->population -= *(e[i].level) * e[i].time / (10 * (4 - *(e[i].level)));
+					break;
+				case 1:
+					if (e[i].value->money >= 0)
+						e[i].value->money -= 6 * *(e[i].level) * e[i].time / (6 * (4 - *(e[i].level)));
+					else {
+						if ((e[i].value->population > 0) && (e[i].value->population >= e[i].time) && (e[i].time % 5 == 0))
+							e[i].value->population -= e[i].time;
+					}
+					if (e[i].value->love >= 0)
+						e[i].value->love -= 5 * *(e[i].level) * e[i].time / (12 * (4 - *(e[i].level)));
+					else {
+						if ((e[i].value->population > 0) && (e[i].value->population >= e[i].time) && (e[i].time % 5 == 0))
+							e[i].value->population -= e[i].time;
+					}
+					if ((e[i].value->population > 0) && (e[i].value->population >= *(e[i].level) * e[i].time / (12 * (4 - *(e[i].level)))))
+						e[i].value->population -= *(e[i].level) * e[i].time / (12 * (4 - *(e[i].level)));
+					break;
+				case 2:
+					if (e[i].value->money >= 0)
+						e[i].value->money -= 8 * *(e[i].level) * e[i].time / (10 * (4 - *(e[i].level)));
+					else {
+						if ((e[i].value->population > 0) && (e[i].value->population >= e[i].time) && (e[i].time % 10 == 0))
+							e[i].value->population -= e[i].time;
+					}
+					if (e[i].value->love >= 0)
+						e[i].value->love -= 2 * *(e[i].level) * e[i].time / (15 * (4 - *(e[i].level)));
+					else {
+						if ((e[i].value->population > 0) && (e[i].value->population >= e[i].time) && (e[i].time % 10 == 0))
+							e[i].value->population -= e[i].time;
+					}
+					break;
+				case 3:
+					if (e[i].value->money >= 0)
+						e[i].value->money -= 10 * *(e[i].level) * e[i].time / (10 * (4 - *(e[i].level)));
+					else {
+						if ((e[i].value->population > 0) && (e[i].value->population >= e[i].time) && (e[i].time % 10 == 0))
+							e[i].value->population -= e[i].time;
+					}
+					if (e[i].value->love >= 0)
+						e[i].value->love -= 2 * *(e[i].level) * e[i].time / (15 * (4 - *(e[i].level)));
+					else {
+						if ((e[i].value->population > 0) && (e[i].value->population >= e[i].time) && (e[i].time % 10 == 0))
+							e[i].value->population -= e[i].time;
+					}
+					break;
+				case 4:
+					if (e[i].value->money >= 0)
+						e[i].value->money -= 15 * *(e[i].level) * e[i].time / (10 * (4 - *(e[i].level)));
+					else {
+						if ((e[i].value->population > 0) && (e[i].value->population >= e[i].time) && (e[i].time % 10 == 0))
+							e[i].value->population -= e[i].time;
+					}
+					if (e[i].value->love >= 0)
+						e[i].value->love -= 3 * *(e[i].level) * e[i].time / (15 * (4 - *(e[i].level)));
+					else {
+						if ((e[i].value->population > 0) && (e[i].value->population >= e[i].time) && (e[i].time % 10 == 0))
+							e[i].value->population -= e[i].time;
+					}
+					if ((e[i].value->population > 0) && (e[i].value->population >= *(e[i].level) * e[i].time / (15 * (4 - *(e[i].level)))))
+						e[i].value->population -= *(e[i].level) * e[i].time / (15 * (4 - *(e[i].level)));
+					break;
+				case 5:
+					if (e[i].value->money >= 0)
+						e[i].value->money -= 8 * *(e[i].level) * e[i].time / (6 * (4 - *(e[i].level)));
+					else {
+						if ((e[i].value->population > 0) && (e[i].value->population >= e[i].time) && (e[i].time % 5 == 0))
+							e[i].value->population -= e[i].time;
+					}
+					if (e[i].value->love >= 0)
+						e[i].value->love -= 3 * *(e[i].level) * e[i].time / (12 * (4 - *(e[i].level)));
+					else {
+						if ((e[i].value->population > 0) && (e[i].value->population >= e[i].time) && (e[i].time % 5 == 0))
+							e[i].value->population -= e[i].time;
+					}
+					if ((e[i].value->population > 0) && (e[i].value->population >= *(e[i].level) * e[i].time / (12 * (4 - *(e[i].level)))))
+						e[i].value->population -= *(e[i].level) * e[i].time / (12 * (4 - *(e[i].level)));
+					break;
+				default:
+					break;
 				}
-				if (e[i].value->love >= 0)
-					e[i].value->love -= e[i].time / 20;
-				else {
-					if ((e[i].value->population > 0) && (e[i].value->population >= e[i].time))
-						e[i].value->population -= e[i].time;
-				}
-				if ((e[i].value->population > 0) && (e[i].value->population >= e[i].time / 30))
-					e[i].value->population -= e[i].time / 30;
-				break;
-			case 1:
-				if (e[i].value->money >= 0)
-					e[i].value->money -= 5 * (e[i].time / 20) * *(e[i].level);
-				else {
-					if ((e[i].value->population > 0) && (e[i].value->population >= e[i].time))
-						e[i].value->population -= e[i].time;
-				}
-				if (e[i].value->love >= 0)
-					e[i].value->love -= e[i].time / 20;
-				else {
-					if ((e[i].value->population > 0) && (e[i].value->population >= e[i].time))
-						e[i].value->population -= e[i].time;
-				}
-				if ((e[i].value->population > 0) && (e[i].value->population >= e[i].time / 35))
-					e[i].value->population -= e[i].time / 35;
-				break;
-			case 2:
-				if (e[i].value->money >= 0)
-					e[i].value->money -= 5 * (e[i].time / 50) * *(e[i].level);
-				else {
-					if ((e[i].value->population > 0) && (e[i].value->population >= e[i].time))
-						e[i].value->population -= e[i].time;
-				}
-				if (e[i].value->love >= 0)
-					e[i].value->love -= e[i].time / 40;
-				else {
-					if ((e[i].value->population > 0) && (e[i].value->population >= e[i].time))
-						e[i].value->population -= e[i].time;
-				}
-				break;
-			case 3:
-				if (e[i].value->money >= 0)
-					e[i].value->money -= 5 * (e[i].time / 15) * *(e[i].level);
-				else {
-					if ((e[i].value->population > 0) && (e[i].value->population >= e[i].time))
-						e[i].value->population -= e[i].time;
-				}
-				if (e[i].value->love >= 0)
-					e[i].value->love -= e[i].time / 30;
-				else {
-					if ((e[i].value->population > 0) && (e[i].value->population >= e[i].time))
-						e[i].value->population -= e[i].time;
-				}
-				break;
-			case 4:
-				if (e[i].value->money >= 0)
-					e[i].value->money -= 5 * (e[i].time / 15) * *(e[i].level);
-				else {
-					if ((e[i].value->population > 0) && (e[i].value->population >= e[i].time))
-						e[i].value->population -= e[i].time;
-				}
-				if (e[i].value->love >= 0)
-					e[i].value->love -= e[i].time / 20;
-				else {
-					if ((e[i].value->population > 0) && (e[i].value->population >= e[i].time))
-						e[i].value->population -= e[i].time;
-				}
-				if ((e[i].value->population > 0) && (e[i].value->population >= e[i].time / 100))
-					e[i].value->population -= e[i].time / 100;
-				break;
-			case 5:
-				if (e[i].value->money >= 0)
-					e[i].value->money -= 5 * (e[i].time / 20) * *(e[i].level);
-				else {
-					if ((e[i].value->population > 0) && (e[i].value->population >= e[i].time))
-						e[i].value->population -= e[i].time;
-				}
-				if (e[i].value->love >= 0)
-					e[i].value->love -= e[i].time / 35;
-				else {
-					if ((e[i].value->population > 0) && (e[i].value->population >= e[i].time))
-						e[i].value->population -= e[i].time;
-				}
-				if ((e[i].value->population > 0) && (e[i].value->population >= e[i].time / 50))
-					e[i].value->population -= e[i].time / 50;
-				break;
-			default:
-				break;
 			}
 
-			
+
+
 		}
 	}
 	return interval;

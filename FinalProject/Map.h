@@ -211,7 +211,7 @@ void createRandomMap(WindowData& fullViewport, int** &road, int length) {
 }
 
 
-void mapRender(SDL_Renderer* renderer, WindowData& fullViewport, ImageData& road_pic, ImageData& road_pic1) {
+void mapRender(SDL_Renderer* renderer, const WindowData& fullViewport, ImageData& road_pic, ImageData& road_pic1) {
 	int width = fullViewport.w, height=fullViewport.h, wnum=fullViewport.wnum, hnum=fullViewport.hnum;
 	
 	//free up resource
@@ -281,6 +281,78 @@ void mapRender(SDL_Renderer* renderer, WindowData& fullViewport, ImageData& road
 					boxColor(renderer, (double)(width - height / 12) / wnum * (j + 0.5 - 1. / 10), height / 12 + (double)(height - height / 12) / hnum * (i + 0.5 - 1. / 6), (double)(width - height / 12) / wnum * (j + 0.5 + 1. / 10), height / 12 + (double)(height - height / 12) / hnum * (i + 0.5 + 1. / 6), 0xFF4C4C4C);
 			}
 }
+
+void mapRender1(SDL_Renderer* renderer, const WindowData& fullViewport, ImageData& road_pic, ImageData& road_pic1) {
+	int width = fullViewport.w, height = fullViewport.h, wnum = fullViewport.wnum, hnum = fullViewport.hnum;
+
+	//free up resource
+	if (renderer == NULL) {
+		SDL_DestroyTexture(road_pic.texture);
+		SDL_DestroyTexture(road_pic1.texture);
+		return;
+	}
+
+	//background color
+	boxColor(renderer, 0, height/8., width, height*7./8, 0x88004433);
+
+	//draw horizontal road
+	for (int i = 0; i < hnum; i++) {
+		for (int j = 0; j < wnum - 1; j++) {
+			if (((road[i][j] >> 8) % 4) * (road[i][j + 1] % 4))
+				imgRender(renderer, road_pic, Middle, (double)(width) / wnum * (j + 1), height/8.+(double)(height*6./8) / hnum * (i + 0.5), (width) / wnum, (height * 6. / 8) / hnum / 3., 1, NULL, NULL, 0, no, 255);
+		}
+	}
+
+	//draw vertical road
+	for (int j = 0; j < wnum; j++) {
+		for (int i = 0; i < hnum - 1; i++) {
+			if (((road[i][j] >> 4) % 4) * ((road[i + 1][j] >> 12) % 4))
+				imgRender(renderer, road_pic1, Middle, (double)(width) / wnum * (j + 0.5), height/8.+(double)(height*6./8) / hnum * (i + 1), (width) / wnum / 5., (height * 6. / 8) / hnum, 1, NULL, NULL, 0, no, 255);
+		}
+	}
+
+	//intersect for more than two road connection
+	for (int i = 0; i < hnum; i++)
+		for (int j = 0; j < wnum; j++)
+			//Top
+			if (i == 0)
+				//Left
+				if (j == 0) {
+					if (((road[i][j] >> 8) % 4) && ((road[i][j] >> 4) % 4))
+						boxColor(renderer, (double)(width) / wnum * (j + 0.5 - 1. / 10), height/8.+(double)(height*6./8) / hnum * (i + 0.5 - 1. / 6), (double)(width) / wnum * (j + 0.5 + 1. / 10), height/8.+(double)(height*6./8) / hnum * (i + 0.5 + 1. / 6), 0xFF4C4C4C);
+				}
+	//Right
+				else if (j == wnum - 1) {
+					if (((road[i][j] >> 4) % 4) && (road[i][j] % 4))
+						boxColor(renderer, (double)(width) / wnum * (j + 0.5 - 1. / 10), height/8.+(double)(height*6./8) / hnum * (i + 0.5 - 1. / 6), (double)(width) / wnum * (j + 0.5 + 1. / 10), height/8+(double)(height*6./8) / hnum * (i + 0.5 + 1. / 6), 0xFF4C4C4C);
+				}
+				else {
+					if ((((road[i][j] >> 8) % 4) + ((road[i][j] >> 4) % 4) + (road[i][j] % 4)) >= 2)
+						boxColor(renderer, (double)(width) / wnum * (j + 0.5 - 1. / 10), height/8.+(double)(height*6./8) / hnum * (i + 0.5 - 1. / 6), (double)(width) / wnum * (j + 0.5 + 1. / 10), height/8.+(double)(height*6./8) / hnum * (i + 0.5 + 1. / 6), 0xFF4C4C4C);
+				}
+	//bottom
+			else if (i == hnum - 1)
+				//Left
+				if (j == 0) {
+					if (((road[i][j] >> 12) % 4) * ((road[i][j] >> 8) % 4))
+						boxColor(renderer, (double)(width) / wnum * (j + 0.5 - 1. / 10), height/8.+(double)(height*6./8) / hnum * (i + 0.5 - 1. / 6), (double)(width) / wnum * (j + 0.5 + 1. / 10), height/8.+(double)(height*6./8) / hnum * (i + 0.5 + 1. / 6), 0xFF4C4C4C);
+				}
+	//Right
+				else if (j == wnum - 1) {
+					if (((road[i][j] >> 12) % 4) * (road[i][j] % 4))
+						boxColor(renderer, (double)(width) / wnum * (j + 0.5 - 1. / 10), height/8.+(double)(height*6./8) / hnum * (i + 0.5 - 1. / 6), (double)(width) / wnum * (j + 0.5 + 1. / 10), height/8.+(double)(height*6./8) / hnum * (i + 0.5 + 1. / 6), 0xFF4C4C4C);
+				}
+				else {
+					if ((((road[i][j] >> 12) % 4) + ((road[i][j] >> 8) % 4) + (road[i][j] % 4)) >= 2)
+						boxColor(renderer, (double)(width) / wnum * (j + 0.5 - 1. / 10), height/8.+(double)(height*6./8) / hnum * (i + 0.5 - 1. / 6), (double)(width) / wnum * (j + 0.5 + 1. / 10), height/8.+(double)(height*6./8) / hnum * (i + 0.5 + 1. / 6), 0xFF4C4C4C);
+				}
+	//Other place
+			else {
+				if ((((road[i][j] >> 12) % 4) + ((road[i][j] >> 8) % 4) + ((road[i][j] >> 4) % 4) + (road[i][j] % 4)) >= 2)
+					boxColor(renderer, (double)(width) / wnum * (j + 0.5 - 1. / 10), height/8.+(double)(height*6./8) / hnum * (i + 0.5 - 1. / 6), (double)(width) / wnum * (j + 0.5 + 1. / 10), height/8.+(double)(height*6./8) / hnum * (i + 0.5 + 1. / 6), 0xFF4C4C4C);
+			}
+}
+
 
 int checkRoad(int y_num, int x_num) {
 	int t = 0;
